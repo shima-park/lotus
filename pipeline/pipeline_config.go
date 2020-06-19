@@ -55,6 +55,7 @@ func (c Config) NewProcessors() ([]Processor, error) {
 				Name:      processorName,
 				RawConfig: rawConfig,
 				Processor: p,
+				Factory:   factory,
 			})
 		}
 	}
