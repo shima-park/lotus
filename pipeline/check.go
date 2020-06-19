@@ -145,14 +145,3 @@ func checkOut(inj inject.Injector, t reflect.Type) []error {
 	}
 	return errs
 }
-
-func filterMissingDependencyError(errs []error) []MissingDependencyError {
-	var mdeErrs []MissingDependencyError
-	for _, err := range errs {
-		cause, ok := err.(MissingDependencyError)
-		if ok {
-			mdeErrs = append(mdeErrs, cause)
-		}
-	}
-	return mdeErrs
-}

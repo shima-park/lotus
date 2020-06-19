@@ -115,9 +115,8 @@ func New(opts ...Option) (Pipeliner, error) {
 		}
 
 		if _, ok := distinct[instance.Type()][instance.Name()]; ok {
-			return nil, fmt.Errorf("Type: %s, Name: %s is already registered",
-				instance.Type(), instance.Name(),
-				"Pipeline: "+p.Name()+" Component: "+c.Name,
+			return nil, fmt.Errorf("Pipeline: %s, Component: %s, Type: %s, Name: %s is already registered",
+				p.Name(), c.Name, instance.Type(), instance.Name(),
 			)
 		}
 

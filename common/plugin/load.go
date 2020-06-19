@@ -25,9 +25,7 @@ func List() []Plugin {
 	defer rwlock.RUnlock()
 
 	var snapshots []Plugin
-	for _, p := range loadedPlugins {
-		snapshots = append(snapshots, p)
-	}
+	snapshots = append(snapshots, loadedPlugins...)
 	return snapshots
 }
 
