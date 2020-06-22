@@ -12,6 +12,7 @@ import (
 type PipelinerManager interface {
 	AddPipeline(config Config) (Pipeliner, error)
 	RemovePipeline(name ...string) error
+	RecreatePipeline(config Config) (Pipeliner, error)
 	List() []Pipeliner
 	Find(name string) Pipeliner
 	Restart(name ...string) error
@@ -87,6 +88,32 @@ func (p *pipelinerManager) removePipeline(pipe Pipeliner) error {
 	pipe.Stop()
 	delete(p.pipelines, pipe.Name())
 	return nil
+}
+
+func (p *pipelinerManager) RecreatePipeline(config Config) (Pipeliner, error) {
+	name := config.Name
+	var pipe Pipeliner
+	err := p.doByName(false, []string{name}, func(oldPipe Pipeliner) error {
+		err := p.removePipeline(oldPipe)
+		if err != nil {
+			return fmt.Errorf("Pipeline(%s) %v", name, err)
+		}
+
+		pipe, err = p.addPipeline(config)
+		if err != nil {
+			return fmt.Errorf("Pipeline(%s) %v", name, err)
+		}
+
+		if oldPipe.State() == Running {
+			err = pipe.Start()
+			if err != nil {
+				return fmt.Errorf("Pipeline(%s) %v", name, err)
+			}
+		}
+		return nil
+	})
+
+	return pipe, err
 }
 
 func (p *pipelinerManager) Restart(names ...string) error {
