@@ -1,8 +1,8 @@
 package main
 
 import (
+	cmd "github.com/shima-park/lotus/pkg/cmd/lotusctl"
 	_ "github.com/shima-park/lotus/pkg/component/include"
-	"github.com/shima-park/lotus/pkg/cmd"
 )
 
 func main() {

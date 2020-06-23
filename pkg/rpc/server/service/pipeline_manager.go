@@ -1,4 +1,4 @@
-package pipeline
+package service
 
 import (
 	"fmt"
@@ -7,14 +7,16 @@ import (
 	"sync"
 
 	"errors"
+
+	"github.com/shima-park/lotus/pkg/pipeline"
 )
 
 type PipelinerManager interface {
-	AddPipeline(config Config) (Pipeliner, error)
+	AddPipeline(config pipeline.Config) (pipeline.Pipeliner, error)
 	RemovePipeline(name ...string) error
-	RecreatePipeline(config Config) (Pipeliner, error)
-	List() []Pipeliner
-	Find(name string) Pipeliner
+	RecreatePipeline(config pipeline.Config) (pipeline.Pipeliner, error)
+	List() []pipeline.Pipeliner
+	Find(name string) pipeline.Pipeliner
 	Restart(name ...string) error
 	Start(name ...string) error
 	Stop(name ...string) error
@@ -22,18 +24,18 @@ type PipelinerManager interface {
 
 type pipelinerManager struct {
 	rwlock    sync.RWMutex
-	pipelines map[string]Pipeliner // key: name value: Pipeliner
+	pipelines map[string]pipeline.Pipeliner // key: name value: Pipeliner
 }
 
 func NewPipelinerManager() PipelinerManager {
 	pm := &pipelinerManager{
-		pipelines: map[string]Pipeliner{},
+		pipelines: map[string]pipeline.Pipeliner{},
 	}
 	return pm
 }
 
-func (p *pipelinerManager) List() []Pipeliner {
-	var ps []Pipeliner
+func (p *pipelinerManager) List() []pipeline.Pipeliner {
+	var ps []pipeline.Pipeliner
 
 	p.rwlock.RLock()
 	for _, p := range p.pipelines {
@@ -48,31 +50,31 @@ func (p *pipelinerManager) List() []Pipeliner {
 	return ps
 }
 
-func (p *pipelinerManager) Find(name string) Pipeliner {
+func (p *pipelinerManager) Find(name string) pipeline.Pipeliner {
 	p.rwlock.Lock()
 	defer p.rwlock.Unlock()
 
 	return p.find(name)
 }
 
-func (p *pipelinerManager) find(name string) Pipeliner {
+func (p *pipelinerManager) find(name string) pipeline.Pipeliner {
 	return p.pipelines[name]
 }
 
-func (p *pipelinerManager) AddPipeline(config Config) (Pipeliner, error) {
+func (p *pipelinerManager) AddPipeline(config pipeline.Config) (pipeline.Pipeliner, error) {
 	p.rwlock.Lock()
 	defer p.rwlock.Unlock()
 
 	return p.addPipeline(config)
 }
 
-func (p *pipelinerManager) addPipeline(config Config) (Pipeliner, error) {
+func (p *pipelinerManager) addPipeline(config pipeline.Config) (pipeline.Pipeliner, error) {
 	_, ok := p.pipelines[config.Name]
 	if ok {
 		return nil, fmt.Errorf("Pipeline: %s is already register", config.Name)
 	}
 
-	pipe, err := NewPipelineByConfig(config)
+	pipe, err := pipeline.NewPipelineByConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -84,16 +86,16 @@ func (p *pipelinerManager) RemovePipeline(names ...string) error {
 	return p.doByName(false, names, p.removePipeline)
 }
 
-func (p *pipelinerManager) removePipeline(pipe Pipeliner) error {
+func (p *pipelinerManager) removePipeline(pipe pipeline.Pipeliner) error {
 	pipe.Stop()
 	delete(p.pipelines, pipe.Name())
 	return nil
 }
 
-func (p *pipelinerManager) RecreatePipeline(config Config) (Pipeliner, error) {
+func (p *pipelinerManager) RecreatePipeline(config pipeline.Config) (pipeline.Pipeliner, error) {
 	name := config.Name
-	var pipe Pipeliner
-	err := p.doByName(false, []string{name}, func(oldPipe Pipeliner) error {
+	var pipe pipeline.Pipeliner
+	err := p.doByName(false, []string{name}, func(oldPipe pipeline.Pipeliner) error {
 		err := p.removePipeline(oldPipe)
 		if err != nil {
 			return fmt.Errorf("Pipeline(%s) %v", name, err)
@@ -104,7 +106,7 @@ func (p *pipelinerManager) RecreatePipeline(config Config) (Pipeliner, error) {
 			return fmt.Errorf("Pipeline(%s) %v", name, err)
 		}
 
-		if oldPipe.State() == Running {
+		if oldPipe.State() == pipeline.Running {
 			err = pipe.Start()
 			if err != nil {
 				return fmt.Errorf("Pipeline(%s) %v", name, err)
@@ -117,7 +119,7 @@ func (p *pipelinerManager) RecreatePipeline(config Config) (Pipeliner, error) {
 }
 
 func (p *pipelinerManager) Restart(names ...string) error {
-	return p.doByName(false, names, func(oldPipe Pipeliner) error {
+	return p.doByName(false, names, func(oldPipe pipeline.Pipeliner) error {
 		name := oldPipe.Name()
 		err := p.removePipeline(oldPipe)
 		if err != nil {
@@ -138,8 +140,8 @@ func (p *pipelinerManager) Restart(names ...string) error {
 }
 
 func (p *pipelinerManager) Start(names ...string) error {
-	return p.doByName(true, names, func(pipe Pipeliner) error {
-		if pipe.State() == Exited {
+	return p.doByName(true, names, func(pipe pipeline.Pipeliner) error {
+		if pipe.State() == pipeline.Exited {
 			return fmt.Errorf("Pipeline(%s)'s state is exited, please try to restart it", pipe.Name())
 		}
 		return pipe.Start()
@@ -147,13 +149,13 @@ func (p *pipelinerManager) Start(names ...string) error {
 }
 
 func (p *pipelinerManager) Stop(names ...string) error {
-	return p.doByName(true, names, func(pipe Pipeliner) error {
+	return p.doByName(true, names, func(pipe pipeline.Pipeliner) error {
 		pipe.Stop()
 		return nil
 	})
 }
 
-func (p *pipelinerManager) doByName(isReadLock bool, names []string, callback func(pipe Pipeliner) error) error {
+func (p *pipelinerManager) doByName(isReadLock bool, names []string, callback func(pipe pipeline.Pipeliner) error) error {
 	if isReadLock {
 		p.rwlock.RLock()
 		defer p.rwlock.RUnlock()

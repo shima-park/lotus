@@ -1,9 +1,11 @@
-APP_NAME=lotus
+.PHONY: build-ctl
+build-ctl:
+	go build -o lotusctl -trimpath cmd/lotusctl/main.go
 
-.PHONY: build
-build:
-	go build -o $(APP_NAME) -trimpath cmd/$(APP_NAME)/main.go
+.PHONY: build-srv
+build-srv:
+	go build -o lotussrv -trimpath cmd/lotussrv/main.go
 
 .PHONY: run
 run:
-	./$(APP_NAME) server run --http :8080 --meta ./meta
+	./lotussrv server run --http :8080 --meta ./meta

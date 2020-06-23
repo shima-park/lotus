@@ -21,11 +21,11 @@ const (
 
 type pipelineService struct {
 	metadata        proto.Metadata
-	pipelineManager pipeline.PipelinerManager
+	pipelineManager PipelinerManager
 }
 
 func NewPipelineService(metadata proto.Metadata,
-	pipelineManager pipeline.PipelinerManager) proto.Pipeline {
+	pipelineManager PipelinerManager) proto.Pipeline {
 	return &pipelineService{
 		metadata:        metadata,
 		pipelineManager: pipelineManager,

@@ -1,4 +1,4 @@
-package cmd
+package lotusctl
 
 import (
 	"github.com/shima-park/lotus/pkg/rpc/proto"
