@@ -18,7 +18,7 @@ var (
 	_                          component.Component = &Gin{}
 	defaultGracefulStopTimeout                     = time.Second * 30
 	defaultConfig                                  = Config{
-		Name:                "GinServer",
+		Name:                "gin_server",
 		Addr:                ":8080",
 		GracefulStopTimeout: defaultGracefulStopTimeout,
 	}

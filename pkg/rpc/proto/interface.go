@@ -7,6 +7,7 @@ import (
 type Pipeline interface {
 	GenerateConfig(name, schdule string, components, processors []string) (*pipe.Config, error)
 	Add(conf pipe.Config) error
+	Remove(names ...string) error
 	Recreate(conf pipe.Config) error
 	List() ([]PipelineView, error)
 	Find(name string) (*PipelineView, error)
@@ -24,9 +25,10 @@ type Processor interface {
 }
 
 type Plugin interface {
-	List() ([]PluginView, error)
 	Open(path string) error
 	Add(path string) error
+	Remove(paths ...string) error
+	List() ([]PluginView, error)
 }
 
 type Server interface {

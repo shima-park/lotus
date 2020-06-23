@@ -14,7 +14,7 @@ var (
 	factory       component.Factory   = NewFactory()
 	_             component.Component = &Client{}
 	defaultConfig                     = Config{
-		Name: "MyES",
+		Name: "my_es_client",
 		Addr: "127.0.0.1:9200",
 	}
 	description = "es client factory"

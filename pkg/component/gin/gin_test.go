@@ -2,8 +2,6 @@ package gin
 
 import (
 	"testing"
-
-	"gotest.tools/v3/assert"
 )
 
 func TestGin(t *testing.T) {
@@ -13,10 +11,14 @@ func TestGin(t *testing.T) {
       routers:
         GET: /send/article`)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	err = g.Start()
-	assert.NilError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = g.Stop()
-	assert.NilError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

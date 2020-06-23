@@ -17,7 +17,7 @@ var (
 	readerFactory       component.Factory   = NewReaderFactory()
 	_                   component.Component = &Reader{}
 	defaultReaderConfig                     = ReaderConfig{
-		Name: "MyReader",
+		Name: "my_reader",
 		Path: "stdin",
 	}
 	readerDescription = "file reader e.g.: stdin, stdout, stderr, /var/log/xxx.log"

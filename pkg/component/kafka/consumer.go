@@ -16,7 +16,7 @@ var (
 	consumerFactory       component.Factory   = NewConsumerFactory()
 	_                     component.Component = &Consumer{}
 	defaultConsumerConfig                     = ConsumerConfig{
-		Name:              "MyKafkaConsumer",
+		Name:              "my_kafka_consumer",
 		Addrs:             []string{"localhost:9092"},
 		ConsumerGroup:     "my_consumer_group",
 		Topics:            []string{"my_topics"},

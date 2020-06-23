@@ -69,3 +69,20 @@ func (s *Server) uploadPlugin(c *gin.Context) {
 
 	Success(c, nil)
 }
+
+func (s *Server) removePlugin(c *gin.Context) {
+	var paths []string
+	err := c.BindJSON(&paths)
+	if err != nil {
+		Failed(c, err)
+		return
+	}
+
+	err = s.Plugin.Remove(paths...)
+	if err != nil {
+		Failed(c, err)
+		return
+	}
+
+	Success(c, nil)
+}

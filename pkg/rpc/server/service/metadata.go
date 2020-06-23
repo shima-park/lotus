@@ -47,8 +47,8 @@ func NewMetadata(metapath string) (proto.Metadata, error) {
 		return nil, fmt.Errorf("Failed to create data path %s: %v", metapath, err)
 	}
 
-	_, err = os.Lstat(m.metafile)
-	if err != nil && os.IsNotExist(err) {
+	_, err = os.Stat(m.metafile)
+	if os.IsNotExist(err) {
 		log.Info("No metadata file found under: %s. Creating a new metadata file.", m.metafile)
 		if err = m.save(); err != nil {
 			return nil, err
@@ -123,9 +123,9 @@ func (m *metadata) RemovePath(ft proto.FileType, path string) error {
 		}
 	}
 
-	err := os.Remove(path)
-	if err != nil {
-		return err
+	_, err := os.Stat(path)
+	if !os.IsNotExist(err) {
+		os.Remove(path)
 	}
 
 	return m.save()
@@ -147,12 +147,16 @@ func (m *metadata) ListPaths(ft proto.FileType) []string {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
+	var ret []string
+
 	paths, ok := m.paths[ft]
 	if ok {
-		return paths
+		for _, path := range paths {
+			ret = append(ret, path)
+		}
 	}
 
-	return nil
+	return ret
 }
 
 func (m *metadata) addPath(path string, pattern string, ft proto.FileType) error {

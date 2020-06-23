@@ -8,6 +8,8 @@ import (
 	"github.com/shima-park/lotus/pkg/rpc/proto"
 )
 
+var _ proto.Pipeline = &pipeline{}
+
 type pipeline struct {
 	apiBuilder
 }
@@ -20,6 +22,10 @@ func (p *pipeline) List() ([]proto.PipelineView, error) {
 
 func (p *pipeline) Add(conf pipe.Config) error {
 	return PostYaml(p.api("/pipeline/add"), conf, nil)
+}
+
+func (p *pipeline) Remove(names ...string) error {
+	return PostJSON(p.api("/pipeline/remove"), &names, nil)
 }
 
 func (p *pipeline) Control(cmd proto.ControlCommand, names []string) error {

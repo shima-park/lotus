@@ -11,6 +11,7 @@ func (s *Server) setRouter() {
 	r := s.engine
 	r.GET("/pipeline/generate-config", s.generateConfig)
 	r.POST("/pipeline/add", s.addPipeline)
+	r.POST("/pipeline/remove", s.removePipeline)
 	r.POST("/pipeline/recreate", s.recreatePipeline)
 	r.GET("/pipeline/ctrl", s.ctrlPipeline)
 	r.GET("/pipeline/list", s.listPipelines)
@@ -25,6 +26,7 @@ func (s *Server) setRouter() {
 	r.GET("/plugin/list", s.listPlugins)
 	r.POST("/plugin/upload", s.uploadPlugin)
 	r.POST("/plugin/open", s.openPlugin)
+	r.POST("/plugin/remove", s.removePlugin)
 
 	r.GET("/metadata", func(c *gin.Context) {
 		Success(c, proto.MetadataView{

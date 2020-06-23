@@ -14,7 +14,7 @@ var (
 	factory       component.Factory   = NewFactory()
 	_             component.Component = &Client{}
 	defaultConfig                     = Config{
-		Name:     "MyRedisClient",
+		Name:     "my_redis_client",
 		Addr:     "127.0.0.1:18000",
 		Password: "",
 		DB:       0,

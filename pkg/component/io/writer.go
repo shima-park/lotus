@@ -18,7 +18,7 @@ var (
 	writerFactory       component.Factory   = NewWriterFactory()
 	_                   component.Component = &Writer{}
 	defaultWriterConfig                     = ReaderConfig{
-		Name: "MyWriter",
+		Name: "my_writer",
 		Path: "stdout",
 	}
 	writerDescription = "file writer e.g.: stdout, stderr, /dev/null, /var/log/xxx.log"

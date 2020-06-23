@@ -30,8 +30,9 @@ func NewEditCmd(cmds ...*cobra.Command) *cobra.Command {
 
 func NewEditPipeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pipe (NAME)",
-		Short: "Edit a pipeline's config on the server",
+		Use:     "pipeline (NAME)",
+		Aliases: []string{"pipe"},
+		Short:   "Edit a pipeline's config on the server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				handleErr(errors.New("You must provide a pipeline name"))
@@ -51,7 +52,11 @@ func runEditor(origin []byte, callback func(pipeline.Config) error) error {
 	edit := editor.NewDefaultEditor([]string{"EDITOR"})
 	buff := bytes.NewBuffer(origin)
 	edited, path, err := edit.LaunchTempFile("edit-", "", buff)
-	_ = os.Remove(path)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(path)
+
 	if bytes.Equal(origin, edited) {
 		fmt.Println("Edit cancelled, no changes made.")
 		return nil

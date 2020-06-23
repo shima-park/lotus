@@ -67,6 +67,7 @@ func NewGetPipeCmd() *cobra.Command {
 }
 
 func NewGetCompCmd() *cobra.Command {
+	var o string
 	var p string
 	cmd := &cobra.Command{
 		Use:     "component",
@@ -75,41 +76,62 @@ func NewGetCompCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			var list []proto.ComponentView
 			if p == "" {
-				fmt.Println("Register components:(show pipeline's components use -p {pipeline_name})")
 				var err error
 				list, err = newClient().Component.List()
 				handleErr(err)
 			} else {
-				fmt.Printf("Pipeline: %s components:\n", p)
 				pipe, err := newClient().Pipeline.Find(p)
 				handleErr(err)
 				list = pipe.Components
 			}
 
-			var rows [][]string
+			var filters []proto.ComponentView
 			for _, e := range list {
 				if len(args) > 0 && !stringInSlice(e.Name, args) {
 					continue
 				}
-				rows = append(rows, []string{
-					e.Name, e.RawConfig, e.SampleConfig, e.Description, e.InjectName, e.ReflectType,
-				})
+				filters = append(filters, e)
 			}
 
-			header := []string{
-				"name", "raw_config", "sample_config", "desc", "inject_name", "reflect_type",
-			}
+			if o == "" {
+				var rows [][]string
+				for _, e := range filters {
+					if p == "" {
+						rows = append(rows, []string{
+							e.Name, e.SampleConfig, e.Description, e.InjectName, e.ReflectType,
+						})
+					} else {
+						rows = append(rows, []string{
+							e.Name, e.RawConfig, e.Description, e.InjectName, e.ReflectType,
+						})
+					}
+				}
 
-			renderTable(header, rows)
+				header := []string{
+					"name", "config", "desc", "inject_name", "reflect_type",
+				}
+
+				renderTable(header, rows)
+			} else {
+				for _, e := range filters {
+					if p == "" {
+						fmt.Println(string(e.SampleConfig))
+					} else {
+						fmt.Println(string(e.RawConfig))
+					}
+				}
+			}
 		},
 	}
 
 	cmd.Flags().StringVarP(&p, "pipeline", "p", "", "The pipeline scope for this CLI request")
+	cmd.Flags().StringVarP(&o, "output", "o", "", "Output by yaml format.")
 
 	return cmd
 }
 
 func NewGetProcCmd() *cobra.Command {
+	var o string
 	var p string
 	cmd := &cobra.Command{
 		Use:     "processor",
@@ -118,36 +140,56 @@ func NewGetProcCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			var list []proto.ProcessorView
 			if p == "" {
-				fmt.Println("Register processors:(show pipeline's processors use -p {pipeline_name})")
 				var err error
 				list, err = newClient().Processor.List()
 				handleErr(err)
 			} else {
-				fmt.Printf("Pipeline: %s processors:\n", p)
 				pipe, err := newClient().Pipeline.Find(p)
 				handleErr(err)
 				list = pipe.Processors
 			}
 
-			var rows [][]string
+			var filters []proto.ProcessorView
 			for _, e := range list {
 				if len(args) > 0 && !stringInSlice(e.Name, args) {
 					continue
 				}
-				rows = append(rows, []string{
-					e.Name, e.RawConfig, e.SampleConfig, e.Description,
-				})
+				filters = append(filters, e)
 			}
 
-			header := []string{
-				"name", "raw_config", "sample_config", "desc",
-			}
+			if o == "" {
+				var rows [][]string
+				for _, e := range filters {
+					if p == "" {
+						rows = append(rows, []string{
+							e.Name, e.SampleConfig, e.Description,
+						})
+					} else {
+						rows = append(rows, []string{
+							e.Name, e.RawConfig, e.Description,
+						})
+					}
+				}
 
-			renderTable(header, rows)
+				header := []string{
+					"name", "config", "desc",
+				}
+
+				renderTable(header, rows)
+			} else {
+				for _, e := range filters {
+					if p == "" {
+						fmt.Println(string(e.SampleConfig))
+					} else {
+						fmt.Println(string(e.RawConfig))
+					}
+				}
+			}
 		},
 	}
 
 	cmd.Flags().StringVarP(&p, "pipeline", "p", "", "The pipeline scope for this CLI request")
+	cmd.Flags().StringVarP(&o, "output", "o", "", "Output by yaml format.")
 
 	return cmd
 }
@@ -168,11 +210,11 @@ func NewGetPluginCmd() *cobra.Command {
 					continue
 				}
 				rows = append(rows, []string{
-					e.Path, e.Module, e.OpenTime,
+					e.Name, e.Path, e.Module, e.OpenTime,
 				})
 			}
 
-			header := []string{"path", "module", "open_time"}
+			header := []string{"name", "path", "module", "open_time"}
 
 			renderTable(header, rows)
 		},
@@ -187,7 +229,7 @@ func NewGetServerCmd() *cobra.Command {
 	var p string
 	cmd := &cobra.Command{
 		Use:     "server",
-		Aliases: []string{"serv"},
+		Aliases: []string{"serv", "srv"},
 		Short:   "Display server metadata",
 		Run: func(cmd *cobra.Command, args []string) {
 			meta, err := newClient().Server.Metadata()

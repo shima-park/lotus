@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -100,9 +101,12 @@ func (s *pipelineService) Add(conf pipeline.Config) error {
 		return err
 	}
 
-	_, err = s.pipelineManager.AddPipeline(conf)
+	pipe, err := s.pipelineManager.AddPipeline(conf)
 	if err != nil {
-		return err
+		buff := bytes.NewBuffer(nil)
+		ASCIITableVisualizer(buff, pipe)
+		buff.WriteString(err.Error())
+		return errors.New(buff.String())
 	}
 
 	err = s.metadata.AddPath(proto.FileTypePipelineConfig, path)
@@ -110,6 +114,24 @@ func (s *pipelineService) Add(conf pipeline.Config) error {
 		return err
 	}
 	return nil
+}
+
+func (s *pipelineService) Remove(names ...string) error {
+	var errs []string
+	for _, name := range names {
+		path := s.getConfigPath(name)
+		err := s.metadata.RemovePath(proto.FileTypePipelineConfig, path)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+
+		err = s.pipelineManager.RemovePipeline(name)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	return ErrorGroup(errs).Error()
 }
 
 func (s *pipelineService) Find(name string) (*proto.PipelineView, error) {

@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/shima-park/lotus/pkg/common/plugin"
 	"github.com/shima-park/lotus/pkg/rpc/proto"
 )
@@ -21,9 +19,10 @@ func (s *pluginService) List() ([]proto.PluginView, error) {
 	var res []proto.PluginView
 	for _, p := range plugin.List() {
 		res = append(res, proto.PluginView{
+			Name:     p.Name,
 			Path:     p.Path,
 			Module:   p.Module,
-			OpenTime: fmt.Sprint(p.OpenTime),
+			OpenTime: p.OpenTime.Format("2006-01-02 15:04:05"),
 		})
 	}
 	return res, nil
@@ -34,15 +33,22 @@ func (s *pluginService) Open(path string) error {
 }
 
 func (s *pluginService) Add(path string) error {
-	err := s.metadata.AddPath(proto.FileTypePlugin, path)
+	err := plugin.LoadPlugins(path)
 	if err != nil {
 		return err
+	}
+	return s.metadata.AddPath(proto.FileTypePlugin, path)
+}
+
+func (s *pluginService) Remove(paths ...string) error {
+	var errs []string
+	for _, path := range paths {
+		err := s.metadata.RemovePath(proto.FileTypePlugin, path)
+		if err != nil {
+			errs = append(errs, err.Error())
+			continue
+		}
 	}
 
-	err = plugin.LoadPlugins(path)
-	if err != nil {
-		_ = s.metadata.RemovePath(proto.FileTypePlugin, path)
-		return err
-	}
-	return nil
+	return ErrorGroup(errs).Error()
 }

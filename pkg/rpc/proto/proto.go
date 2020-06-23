@@ -57,6 +57,7 @@ type ProcessorView struct {
 }
 
 type PluginView struct {
+	Name     string `json:"name"`
 	Path     string `json:"path"`
 	Module   string `json:"module"`
 	OpenTime string `json:"open_time"`

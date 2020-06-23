@@ -33,6 +33,22 @@ func (s *Server) addPipeline(c *gin.Context) {
 	Success(c, nil)
 }
 
+func (s *Server) removePipeline(c *gin.Context) {
+	var names []string
+	if err := c.BindJSON(&names); err != nil {
+		Failed(c, err)
+		return
+	}
+
+	err := s.Pipeline.Remove(names...)
+	if err != nil {
+		Failed(c, err)
+		return
+	}
+
+	Success(c, nil)
+}
+
 func (s *Server) ctrlPipeline(c *gin.Context) {
 	err := s.Pipeline.Control(proto.ControlCommand(c.Query("cmd")), c.QueryArray("name"))
 	if err != nil {

@@ -1,4 +1,4 @@
-package server
+package service
 
 import (
 	"io"
@@ -10,10 +10,9 @@ import (
 	"github.com/shima-park/lotus/pkg/processor"
 )
 
-func ASCIITableVisualizer(w io.Writer, pipeline pipeline.Pipeliner) error {
+func ASCIITableVisualizer(w io.Writer, pipeline pipeline.Pipeliner) {
 	printPipelineComponents(w, pipeline)
 	printPipelineProcessors(w, pipeline)
-	return nil
 }
 
 func printPipelineComponents(w io.Writer, p pipeline.Pipeliner) {

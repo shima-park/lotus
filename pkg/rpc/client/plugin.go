@@ -10,6 +10,8 @@ import (
 	"github.com/shima-park/lotus/pkg/rpc/proto"
 )
 
+var _ proto.Plugin = &plugin{}
+
 type plugin struct {
 	apiBuilder
 }
@@ -73,4 +75,8 @@ func (c *plugin) Add(path string) error {
 		return err
 	}
 	return nil
+}
+
+func (p *plugin) Remove(names ...string) error {
+	return PostJSON(p.api("/plugin/remove"), &names, nil)
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"io/ioutil"
+	"os"
 
 	"github.com/shima-park/lotus/pkg/common/log"
 	"github.com/shima-park/lotus/pkg/common/plugin"
@@ -35,20 +36,41 @@ func NewService(metadata proto.Metadata) *Service {
 }
 
 func (s *Service) Start() error {
-	for _, path := range s.metadata.ListPaths(proto.FileTypePlugin) {
+	plugins := s.metadata.ListPaths(proto.FileTypePlugin)
+	for _, path := range plugins {
+		if s.cleanIfNotExists(proto.FileTypePlugin, path) {
+			continue
+		}
 		err := plugin.LoadPlugins(path)
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, path := range s.metadata.ListPaths(proto.FileTypePipelineConfig) {
+	pipes := s.metadata.ListPaths(proto.FileTypePipelineConfig)
+	for _, path := range pipes {
+		if s.cleanIfNotExists(proto.FileTypePipelineConfig, path) {
+			continue
+		}
 		err := loadPipelineFromFile(path, s.pipelineManager)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (s *Service) cleanIfNotExists(ft proto.FileType, path string) bool {
+	_, err := os.Lstat(path)
+	if os.IsNotExist(err) {
+		log.Info("Remove %s %s because it's not exists", ft, path)
+		rerr := s.metadata.RemovePath(ft, path)
+		if rerr != nil {
+			log.Error("Remove %s %s error: %v", ft, path, rerr)
+		}
+		return true
+	}
+	return false
 }
 
 func loadPipelineFromFile(path string, pm PipelinerManager) error {

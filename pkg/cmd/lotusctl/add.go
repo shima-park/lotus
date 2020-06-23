@@ -1,6 +1,7 @@
 package lotusctl
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -57,7 +58,7 @@ func NewAddPipelineCmd() *cobra.Command {
 					handleErr(err)
 				}
 			} else {
-				fmt.Println("-f pipeline.yaml or -n test -p test_print -c es_client you at least provide one of them")
+				fmt.Println("-f pipeline.yaml or -n test -p read_line -c es_client you at least provide one of them")
 			}
 
 		},
@@ -77,6 +78,9 @@ func NewAddPluginCmd() *cobra.Command {
 		Aliases: []string{"plug"},
 		Short:   "Add a plugin to the server",
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				handleErr(errors.New("You must provide a plugin path"))
+			}
 			for _, path := range args {
 				_, err := os.Lstat(path)
 				if os.IsNotExist(err) {

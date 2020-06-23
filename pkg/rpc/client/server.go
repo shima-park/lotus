@@ -2,6 +2,8 @@ package client
 
 import "github.com/shima-park/lotus/pkg/rpc/proto"
 
+var _ proto.Server = &server{}
+
 type server struct {
 	apiBuilder
 }

@@ -8,8 +8,17 @@ import (
 	"github.com/shima-park/lotus/pkg/rpc/client"
 )
 
-func newClient() *client.Client {
-	return client.NewClient("localhost:8080")
+func newClient(hosts ...string) *client.Client {
+	var host string
+	if len(host) > 0 {
+		host = hosts[0]
+	} else if envHosts := os.Getenv("LOTUS_SERVER_ENV"); envHosts != "" {
+		host = envHosts
+	} else {
+		host = "localhost:8080"
+	}
+
+	return client.NewClient(host)
 }
 
 func renderTable(header []string, rows [][]string) {

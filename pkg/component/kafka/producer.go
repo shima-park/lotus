@@ -15,7 +15,7 @@ var (
 	producerFactory       component.Factory   = NewProducerFactory()
 	_                     component.Component = &Producer{}
 	defaultProducerConfig                     = ProducerConfig{
-		Name:  "MyKafkaProducer",
+		Name:  "my_kafka_producer",
 		Addrs: []string{"localhost:9092"},
 	}
 	producerDescription = "kafka producer factory"
