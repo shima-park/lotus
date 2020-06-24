@@ -54,3 +54,15 @@ func getInjectName(factory component.Factory) string {
 	_ = yaml.Unmarshal([]byte(factory.SampleConfig()), &sniff)
 	return sniff.Name
 }
+
+func setInjectName(name string, config string) string {
+	m := map[string]interface{}{}
+	_ = yaml.Unmarshal([]byte(config), &m)
+	if _, ok := m["name"]; ok {
+		m["name"] = name
+	} else {
+		return config
+	}
+	b, _ := yaml.Marshal(m)
+	return string(b)
+}

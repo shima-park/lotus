@@ -34,19 +34,7 @@ func NewPipelineService(metadata proto.Metadata,
 }
 
 func (s *pipelineService) GenerateConfig(name, schedule string, components, processors []string) (*pipeline.Config, error) {
-	var componentConfigs []map[string]string
-	for _, name := range components {
-		name = strings.TrimSpace(name)
-		f, err := component.GetFactory(name)
-		if err != nil {
-			return nil, err
-		}
-
-		componentConfigs = append(componentConfigs, map[string]string{
-			name: f.SampleConfig(),
-		})
-	}
-
+	dependencyMap := map[string][]string{} // key:type value:inject_name
 	var processorConfigs []map[string]string
 	streamConfig := &pipeline.StreamConfig{}
 	t := streamConfig
@@ -65,8 +53,42 @@ func (s *pipelineService) GenerateConfig(name, schedule string, components, proc
 			t = &t.Childs[0]
 		}
 
+		// 获取processor的component依赖项的type和injectName
+		reqs, resps := getFuncReqAndRespReceptorList(f.Example())
+		for _, r := range append(reqs, resps...) {
+			dependencyMap[r.ReflectType] = append(dependencyMap[r.ReflectType], r.InjectName)
+		}
+
 		processorConfigs = append(processorConfigs, map[string]string{
 			name: f.SampleConfig(),
+		})
+	}
+
+	dependencyUsedMap := map[string]int{} // key:type value:index
+	var componentConfigs []map[string]string
+	for _, name := range components {
+		name = strings.TrimSpace(name)
+		f, err := component.GetFactory(name)
+		if err != nil {
+			return nil, err
+		}
+
+		// 设置component的注入名字和processor一致
+		config := f.SampleConfig()
+		if injectNames, ok := dependencyMap[f.ExampleType().String()]; ok {
+			i := dependencyUsedMap[f.ExampleType().String()]
+			var injectName string
+			if i < len(injectNames) {
+				injectName = injectNames[i]
+			} else {
+				injectName = injectNames[len(injectNames)-1]
+			}
+			config = setInjectName(injectName, config)
+			dependencyUsedMap[f.ExampleType().String()]++
+		}
+
+		componentConfigs = append(componentConfigs, map[string]string{
+			name: config,
 		})
 	}
 
