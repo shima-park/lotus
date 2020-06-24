@@ -35,6 +35,7 @@ func NewFactory() component.Factory {
 	return component.NewFactory(
 		defaultConfig,
 		description,
+		reflect.TypeOf(&gin.Engine{}),
 		func(c string) (component.Component, error) {
 			return NewGin(c)
 		})

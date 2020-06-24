@@ -1,10 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/shima-park/lotus/pkg/component"
 	"github.com/shima-park/lotus/pkg/rpc/proto"
+	"gopkg.in/yaml.v2"
 )
 
 type componentService struct {
@@ -40,5 +42,15 @@ func newComponentView(name string, factory component.Factory) *proto.ComponentVi
 		Name:         name,
 		SampleConfig: factory.SampleConfig(),
 		Description:  factory.Description(),
+		InjectName:   getInjectName(factory),
+		ReflectType:  fmt.Sprint(factory.ExampleType()),
 	}
+}
+
+func getInjectName(factory component.Factory) string {
+	var sniff struct {
+		Name string `yaml:"name"`
+	}
+	_ = yaml.Unmarshal([]byte(factory.SampleConfig()), &sniff)
+	return sniff.Name
 }

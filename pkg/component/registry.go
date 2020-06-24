@@ -2,6 +2,7 @@ package component
 
 import (
 	"fmt"
+	"reflect"
 )
 
 type Factory interface {
@@ -10,6 +11,9 @@ type Factory interface {
 
 	// 组件描述
 	Description() string
+
+	// 组件的Go Type
+	ExampleType() reflect.Type
 
 	// 创建实例
 	New(config string) (Component, error)

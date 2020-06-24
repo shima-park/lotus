@@ -57,3 +57,13 @@ func (p *pipeline) GenerateConfig(name, schedule string, components, processors 
 func (p *pipeline) Recreate(conf pipe.Config) error {
 	return PostYaml(p.api("/pipeline/recreate"), conf, nil)
 }
+
+func (p *pipeline) Visualize(name string, format proto.VisualizeFormat) ([]byte, error) {
+	vals := url.Values{}
+	vals.Add("name", name)
+	vals.Add("format", string(format))
+
+	var data []byte
+	err := GetJSON(p.api("/pipeline/visualize?"+vals.Encode()), &data)
+	return data, err
+}

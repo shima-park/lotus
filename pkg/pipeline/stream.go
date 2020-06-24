@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/shima-park/lotus/pkg/common/inject"
 	"github.com/shima-park/lotus/pkg/common/log"
@@ -161,14 +161,14 @@ func (f *Stream) Invoke(inj inject.Injector) (outVal reflect.Value, err error) {
 
 	err = processor.Validate(p)
 	if err != nil {
-		err = fmt.Errorf("Stream(%s) %v", f.Name(), err)
+		err = errors.Wrapf(err, "Stream(%s)", f.Name())
 		return
 	}
 
 	var vals []reflect.Value
 	vals, err = inj.Invoke(p)
 	if err != nil {
-		err = fmt.Errorf("Stream(%s) %v", f.Name(), err)
+		err = errors.Wrapf(err, "Stream(%s)", f.Name())
 		return
 	}
 

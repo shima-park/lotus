@@ -95,3 +95,16 @@ func (s *Server) recreatePipeline(c *gin.Context) {
 	}
 	Success(c, nil)
 }
+
+func (s *Server) visualizePipeline(c *gin.Context) {
+	data, err := s.Pipeline.Visualize(
+		c.Query("name"),
+		proto.VisualizeFormat(c.Query("format")),
+	)
+	if err != nil {
+		Failed(c, err)
+		return
+	}
+
+	Success(c, data)
+}

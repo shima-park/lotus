@@ -41,6 +41,7 @@ func (s *pipelineService) GenerateConfig(name, schedule string, components, proc
 		if err != nil {
 			return nil, err
 		}
+
 		componentConfigs = append(componentConfigs, map[string]string{
 			name: f.SampleConfig(),
 		})
@@ -101,12 +102,9 @@ func (s *pipelineService) Add(conf pipeline.Config) error {
 		return err
 	}
 
-	pipe, err := s.pipelineManager.AddPipeline(conf)
+	_, err = s.pipelineManager.AddPipeline(conf)
 	if err != nil {
-		buff := bytes.NewBuffer(nil)
-		ASCIITableVisualizer(buff, pipe)
-		buff.WriteString(err.Error())
-		return errors.New(buff.String())
+		return err
 	}
 
 	err = s.metadata.AddPath(proto.FileTypePipelineConfig, path)
@@ -193,7 +191,22 @@ func (s *pipelineService) getConfigPath(name string) string {
 	return path
 }
 
-func convertPipeliner2PipelineView(p pipeline.Pipeliner) *proto.PipelineView {
+func (s *pipelineService) Visualize(name string, format proto.VisualizeFormat) ([]byte, error) {
+	pipe := s.pipelineManager.Find(name)
+	if pipe == nil {
+		return nil, errors.New("Not found pipeline " + name)
+	}
+
+	buff := bytes.NewBuffer(nil)
+	err := pipe.Visualize(buff, string(format))
+	if err != nil {
+		return nil, err
+	}
+
+	return buff.Bytes(), nil
+}
+
+func convertPipeliner2PipelineView(p *PipelineWithError) *proto.PipelineView {
 	return &proto.PipelineView{
 		Name:          p.Name(),
 		State:         p.State().String(),
@@ -208,6 +221,7 @@ func convertPipeliner2PipelineView(p pipeline.Pipeliner) *proto.PipelineView {
 		Components:    convertComponents(p.ListComponents()),
 		Processors:    convertProcessors(p.ListProcessors()),
 		RawConfig:     mustMarshalConfig(p.GetConfig()),
+		Error:         p.Error,
 	}
 }
 
@@ -224,8 +238,8 @@ func convertComponents(comps []pipeline.Component) []proto.ComponentView {
 			RawConfig:    c.RawConfig,
 			SampleConfig: c.Factory.SampleConfig(),
 			Description:  c.Factory.Description(),
+			ReflectType:  fmt.Sprint(c.Factory.ExampleType()),
 			InjectName:   c.Component.Instance().Name(),
-			ReflectType:  c.Component.Instance().Type().String(),
 			ReflectValue: c.Component.Instance().Value().String(),
 		})
 	}

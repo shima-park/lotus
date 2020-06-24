@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"os/exec"
 )
 
@@ -47,7 +46,6 @@ func DotVisualizer(format string) Visualizer {
 		if err != nil {
 			return err
 		}
-		defer os.Remove(dotFile.Name())
 		defer dotFile.Close()
 
 		err = DotGrgphVisualizer(dotFile, pipeline)
@@ -59,12 +57,14 @@ func DotVisualizer(format string) Visualizer {
 		if err != nil {
 			return err
 		}
-		defer os.Remove(outputFile.Name())
 		defer outputFile.Close()
 
-		err = exec.Command("dot", "-T"+format, dotFile.Name(), "-o", outputFile.Name()).Run()
+		cmd := exec.Command("dot", "-T"+format, dotFile.Name(), "-o", outputFile.Name())
+		buff := bytes.NewBuffer(nil)
+		cmd.Stderr = buff
+		err = cmd.Run()
 		if err != nil {
-			return err
+			return fmt.Errorf("error: %s, stderr: %s", err, buff.String())
 		}
 
 		b, err := ioutil.ReadAll(outputFile)
@@ -104,26 +104,32 @@ func DotGrgphVisualizer(w io.Writer, p Pipeliner) error {
 	buffer.WriteString("\n")
 
 	for _, proc := range p.ListProcessors() {
-		buffer.WriteString(fmt.Sprintf(`%s [ label=<
-   <table border="1" cellborder="0" cellspacing="1">`+"\n",
-			proc.Name,
-		))
-
 		first := true
+		hasContent := false
 		p.Monitor().Do(func(namespace string, kv expvar.KeyValue) {
 			if namespace != proc.Name {
 				return
 			}
+
+			if !hasContent {
+				hasContent = true
+			}
 			if first {
 				first = false
+				buffer.WriteString(fmt.Sprintf(`%s [ label=<
+   <table border="1" cellborder="0" cellspacing="1">`+"\n",
+					proc.Name,
+				))
 				buffer.WriteString("<tr><td align=\"left\"><b>" + proc.Name + "</b></td></tr>\n")
 			}
 
 			buffer.WriteString("<tr><td align=\"left\">" + kv.Key + ":" + kv.Value.String() + "</td></tr>\n")
 		})
 
-		buffer.WriteString("</table>>];\n")
-		buffer.WriteString("\n")
+		if hasContent {
+			buffer.WriteString("</table>>];\n")
+			buffer.WriteString("\n")
+		}
 	}
 
 	buildRefRalationship(p.GetConfig().Stream, &buffer)

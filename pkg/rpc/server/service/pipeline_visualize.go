@@ -5,14 +5,20 @@ import (
 	"reflect"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/pkg/errors"
 	"github.com/shima-park/lotus/pkg/common/inject"
 	"github.com/shima-park/lotus/pkg/pipeline"
 	"github.com/shima-park/lotus/pkg/processor"
 )
 
-func ASCIITableVisualizer(w io.Writer, pipeline pipeline.Pipeliner) {
+func init() {
+	pipeline.AddVisualizer("term", TermVisualizer)
+}
+
+func TermVisualizer(w io.Writer, pipeline pipeline.Pipeliner) error {
 	printPipelineComponents(w, pipeline)
 	printPipelineProcessors(w, pipeline)
+	return nil
 }
 
 func printPipelineComponents(w io.Writer, p pipeline.Pipeliner) {
@@ -106,7 +112,7 @@ func printPipelineProcessors(w io.Writer, p pipeline.Pipeliner) {
 func filterMissingDependencyError(errs []error) []pipeline.MissingDependencyError {
 	var mdeErrs []pipeline.MissingDependencyError
 	for _, err := range errs {
-		cause, ok := err.(pipeline.MissingDependencyError)
+		cause, ok := errors.Cause(err).(pipeline.MissingDependencyError)
 		if ok {
 			mdeErrs = append(mdeErrs, cause)
 		}

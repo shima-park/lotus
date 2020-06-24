@@ -31,6 +31,7 @@ func NewProducerFactory() component.Factory {
 	return component.NewFactory(
 		defaultProducerConfig,
 		producerDescription,
+		inject.InterfaceOf((*sarama.SyncProducer)(nil)),
 		func(c string) (component.Component, error) {
 			return NewProducer(c)
 		})

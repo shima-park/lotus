@@ -9,9 +9,10 @@ type FactoryTemplate struct {
 	sampleConfig string
 	description  string
 	factoryFunc  FactoryFunc
+	exampleType  reflect.Type
 }
 
-func NewFactory(sampleConfig interface{}, description string, factoryFunc FactoryFunc) Factory {
+func NewFactory(sampleConfig interface{}, description string, _type reflect.Type, factoryFunc FactoryFunc) Factory {
 	var conf string
 	if sampleConfig != nil {
 		t := reflect.TypeOf(sampleConfig)
@@ -31,11 +32,12 @@ func NewFactory(sampleConfig interface{}, description string, factoryFunc Factor
 		sampleConfig: conf,
 		description:  description,
 		factoryFunc:  factoryFunc,
+		exampleType:  _type,
 	}
 }
 
-func NewFactoryWithProcessor(sampleConfig interface{}, description string, p Component) Factory {
-	return NewFactory(sampleConfig, description, func(string) (Component, error) {
+func NewFactoryWithProcessor(sampleConfig interface{}, description string, _type reflect.Type, p Component) Factory {
+	return NewFactory(sampleConfig, description, _type, func(string) (Component, error) {
 		return p, nil
 	})
 }
@@ -50,4 +52,8 @@ func (f FactoryTemplate) Description() string {
 
 func (f FactoryTemplate) New(config string) (Component, error) {
 	return f.factoryFunc(config)
+}
+
+func (f FactoryTemplate) ExampleType() reflect.Type {
+	return f.exampleType
 }

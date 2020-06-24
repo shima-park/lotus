@@ -34,6 +34,7 @@ func NewWriterFactory() component.Factory {
 	return component.NewFactory(
 		defaultWriterConfig,
 		writerDescription,
+		inject.InterfaceOf((*io.Writer)(nil)),
 		func(c string) (component.Component, error) {
 			return NewWriter(c)
 		})

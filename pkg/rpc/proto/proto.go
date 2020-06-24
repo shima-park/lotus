@@ -11,10 +11,10 @@ const (
 type VisualizeFormat string
 
 const (
-	VisualizeFormatSVG        VisualizeFormat = "svg"
-	VisualizeFormatRaw        VisualizeFormat = "raw"
-	VisualizeFormatDot        VisualizeFormat = "dot"
-	VisualizeFormatASCIITable VisualizeFormat = "ascii_table"
+	VisualizeFormatSVG  VisualizeFormat = "svg"
+	VisualizeFormatPng  VisualizeFormat = "png"
+	VisualizeFormatDot  VisualizeFormat = "dot"
+	VisualizeFormatTerm VisualizeFormat = "term"
 )
 
 type Result struct {
@@ -37,6 +37,7 @@ type PipelineView struct {
 	Components    []ComponentView `json:"components,emitempty"`
 	Processors    []ProcessorView `json:"processors,emitempty"`
 	RawConfig     []byte          `json:"raw_config,emitempty"`
+	Error         string          `json:"error,emitempty"`
 }
 
 type ComponentView struct {

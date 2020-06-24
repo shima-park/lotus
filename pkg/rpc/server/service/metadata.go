@@ -1,13 +1,14 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/shima-park/lotus/pkg/common/log"
 	"github.com/shima-park/lotus/pkg/rpc/proto"
@@ -44,7 +45,7 @@ func NewMetadata(metapath string) (proto.Metadata, error) {
 
 	err := os.MkdirAll(metapath, 0750)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create data path %s: %v", metapath, err)
+		return nil, errors.Wrapf(err, "Failed to create data path %s: %v", metapath)
 	}
 
 	_, err = os.Stat(m.metafile)

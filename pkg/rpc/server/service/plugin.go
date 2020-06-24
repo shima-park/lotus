@@ -18,6 +18,9 @@ func NewPluginService(metadata proto.Metadata) proto.Plugin {
 func (s *pluginService) List() ([]proto.PluginView, error) {
 	var res []proto.PluginView
 	for _, p := range plugin.List() {
+		if !s.metadata.ExistsPath(proto.FileTypePlugin, p.Path) {
+			continue
+		}
 		res = append(res, proto.PluginView{
 			Name:     p.Name,
 			Path:     p.Path,
@@ -40,13 +43,21 @@ func (s *pluginService) Add(path string) error {
 	return s.metadata.AddPath(proto.FileTypePlugin, path)
 }
 
-func (s *pluginService) Remove(paths ...string) error {
+func (s *pluginService) Remove(names ...string) error {
+	m := map[string]string{} // name:path
+	for _, p := range plugin.List() {
+		m[p.Name] = p.Path
+	}
+
 	var errs []string
-	for _, path := range paths {
-		err := s.metadata.RemovePath(proto.FileTypePlugin, path)
-		if err != nil {
-			errs = append(errs, err.Error())
-			continue
+	for _, name := range names {
+		path, ok := m[name]
+		if ok {
+			err := s.metadata.RemovePath(proto.FileTypePlugin, path)
+			if err != nil {
+				errs = append(errs, err.Error())
+				continue
+			}
 		}
 	}
 

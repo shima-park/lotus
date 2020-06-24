@@ -1,19 +1,19 @@
 package pipeline
 
 import (
+	"expvar"
 	"fmt"
 	"io"
+	"reflect"
 
 	"context"
-	"expvar"
 
-	"reflect"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/shima-park/lotus/pkg/common/inject"
 	"github.com/shima-park/lotus/pkg/common/log"
@@ -69,42 +69,81 @@ type pipeliner struct {
 
 	state     int32
 	runningWg sync.WaitGroup
+
+	errs []error
 }
 
-func New(opts ...Option) (Pipeliner, error) {
+func NewPipelineByConfig(conf Config) (Pipeliner, error) {
+	p := newPipelineByConfig(conf)
+	var err error
+	if len(p.errs) > 0 {
+		err = p.errs[0]
+	}
+	return p, err
+}
+
+func newPipelineByConfig(conf Config) *pipeliner {
 	ctx, cancel := context.WithCancel(context.Background())
 	p := &pipeliner{
+		config: conf,
+
+		name: conf.Name,
+
 		ctx:       ctx,
 		cancel:    cancel,
-		injector:  inject.New(),
-		startTime: time.Now(),
 		parser:    defaultScheduleParser,
 		schedule:  defaultSchedule,
+		injector:  inject.New(),
+		startTime: time.Now(),
+
+		monitor: monitor.NewMonitor(conf.Name),
+
+		state: int32(Idle),
+	}
+	p.monitor.Set(METRICS_KEY_PIPELINE_STATE, expvar.Func(func() interface{} { return p.State() }))
+	p.injector.MapTo(p.monitor, "Monitor", (*monitor.Monitor)(nil))
+	p.injector.MapTo(p.ctx, "Context", (*context.Context)(nil))
+	return p.init(conf)
+}
+
+func (p *pipeliner) init(conf Config) *pipeliner {
+	if p.name == "" {
+		p.errs = append(p.errs,
+			errors.Wrap(errors.New("The pipeliner's name cannot be empty "), conf.Name),
+		)
 	}
 
-	apply(p, opts)
+	var err error
+	p.components, err = conf.NewComponents()
+	if err != nil {
+		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
+	}
+
+	p.processors, err = conf.NewProcessors()
+	if err != nil {
+		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
+	}
+
+	var pm = map[string]Processor{}
+	for _, p := range p.processors {
+		pm[p.Name] = p
+	}
+
+	p.stream, err = NewStream(conf.Stream, pm)
+	if err != nil {
+		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
+	}
 
 	if p.stream == nil {
-		return nil, fmt.Errorf("The pipeliner(%s) must have at least one stream", p.Name())
-	}
-
-	if p.name == "" {
-		return nil, fmt.Errorf("The pipeliner(%s)'s name cannot be empty", p.Name())
+		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
 	}
 
 	if p.config.Schedule != "" && p.parser != nil {
-		var err error
 		p.schedule, err = p.parser(p.config.Schedule)
 		if err != nil {
-			return nil, fmt.Errorf("Pipeline: %s %v", p.Name(), err)
+			p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
 		}
 	}
-
-	p.monitor = monitor.NewMonitor(p.Name())
-	p.monitor.Set(METRICS_KEY_PIPELINE_STATE, expvar.Func(func() interface{} { return p.State() }))
-
-	p.injector.MapTo(p.monitor, "Monitor", (*monitor.Monitor)(nil))
-	p.injector.MapTo(p.ctx, "Context", (*context.Context)(nil))
 
 	distinct := map[reflect.Type]map[string]struct{}{}
 	for _, c := range p.components {
@@ -115,9 +154,10 @@ func New(opts ...Option) (Pipeliner, error) {
 		}
 
 		if _, ok := distinct[instance.Type()][instance.Name()]; ok {
-			return nil, fmt.Errorf("Pipeline: %s, Component: %s, Type: %s, Name: %s is already registered",
-				p.Name(), c.Name, instance.Type(), instance.Name(),
+			err = fmt.Errorf("Pipeline: %s, Component: %s, Type: %s, Name: %s is already registered",
+				conf.Name, c.Name, instance.Type(), instance.Name(),
 			)
+			p.errs = append(p.errs, err)
 		}
 
 		distinct[instance.Type()] = map[string]struct{}{
@@ -128,45 +168,10 @@ func New(opts ...Option) (Pipeliner, error) {
 	}
 
 	if errs := p.CheckDependence(); len(errs) > 0 {
-		return nil, errs[0]
+		p.errs = append(p.errs, errs...)
 	}
 
-	return p, nil
-}
-
-func NewPipelineByConfig(conf Config, opts ...Option) (Pipeliner, error) {
-	components, err := conf.NewComponents()
-	if err != nil {
-		return nil, fmt.Errorf("Pipeline: %s %v", conf.Name, err)
-	}
-
-	processors, err := conf.NewProcessors()
-	if err != nil {
-		return nil, fmt.Errorf("Pipeline: %s %v", conf.Name, err)
-	}
-
-	var pm = map[string]Processor{}
-	for _, p := range processors {
-		pm[p.Name] = p
-	}
-
-	stream, err := NewStream(conf.Stream, pm)
-	if err != nil {
-		return nil, fmt.Errorf("Pipeline: %s %v", conf.Name, err)
-	}
-
-	return New(
-		append(
-			[]Option{
-				WithName(conf.Name),
-				WithComponents(components...),
-				WithProcessors(processors...),
-				WithStream(stream),
-				WithConfig(conf),
-			},
-			opts...,
-		)...,
-	)
+	return p
 }
 
 func (p *pipeliner) Name() string {

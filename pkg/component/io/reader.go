@@ -33,6 +33,7 @@ func NewReaderFactory() component.Factory {
 	return component.NewFactory(
 		defaultReaderConfig,
 		readerDescription,
+		inject.InterfaceOf((*io.Reader)(nil)),
 		func(c string) (component.Component, error) {
 			return NewReader(c)
 		})

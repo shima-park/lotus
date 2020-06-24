@@ -5,11 +5,14 @@ import (
 )
 
 type Factory interface {
-	// 组件示例配置
+	// 处理器示例配置
 	SampleConfig() string
 
-	// 组件描述
+	// 处理器描述
 	Description() string
+
+	// 处理器示例
+	Example() Processor
 
 	// 创建实例
 	New(config string) (Processor, error)

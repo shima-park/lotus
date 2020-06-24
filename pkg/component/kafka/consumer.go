@@ -36,6 +36,7 @@ func NewConsumerFactory() component.Factory {
 	return component.NewFactory(
 		defaultConsumerConfig,
 		consumerDescription,
+		reflect.TypeOf(&cluster.Consumer{}),
 		func(c string) (component.Component, error) {
 			return NewConsumer(c)
 		})

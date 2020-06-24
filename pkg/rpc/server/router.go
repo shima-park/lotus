@@ -15,6 +15,7 @@ func (s *Server) setRouter() {
 	r.POST("/pipeline/recreate", s.recreatePipeline)
 	r.GET("/pipeline/ctrl", s.ctrlPipeline)
 	r.GET("/pipeline/list", s.listPipelines)
+	r.GET("/pipeline/visualize", s.visualizePipeline)
 	r.GET("/pipeline", s.findPipeline)
 
 	r.GET("/component/list", s.listComponents)

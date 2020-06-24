@@ -12,6 +12,7 @@ type Pipeline interface {
 	List() ([]PipelineView, error)
 	Find(name string) (*PipelineView, error)
 	Control(cmd ControlCommand, names []string) error
+	Visualize(name string, format VisualizeFormat) ([]byte, error)
 }
 
 type Component interface {
@@ -27,7 +28,7 @@ type Processor interface {
 type Plugin interface {
 	Open(path string) error
 	Add(path string) error
-	Remove(paths ...string) error
+	Remove(names ...string) error
 	List() ([]PluginView, error)
 }
 

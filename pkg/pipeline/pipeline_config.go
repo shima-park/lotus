@@ -16,15 +16,18 @@ type Config struct {
 
 func (c Config) NewComponents() ([]Component, error) {
 	var components []Component
+	var eg ErrorGroup
 	for _, name2config := range c.Components {
 		for componentName, rawConfig := range name2config {
 			factory, err := component.GetFactory(componentName)
 			if err != nil {
-				return nil, err
+				eg = append(eg, err.Error())
+				continue
 			}
 			c, err := factory.New(rawConfig)
 			if err != nil {
-				return nil, err
+				eg = append(eg, err.Error())
+				continue
 			}
 			components = append(components, Component{
 				Name:      componentName,
@@ -35,21 +38,24 @@ func (c Config) NewComponents() ([]Component, error) {
 		}
 	}
 
-	return components, nil
+	return components, eg.Error()
 }
 
 func (c Config) NewProcessors() ([]Processor, error) {
 	var processors []Processor
+	var eg ErrorGroup
 	for _, name2config := range c.Processors {
 		for processorName, rawConfig := range name2config {
 			factory, err := processor.GetFactory(processorName)
 			if err != nil {
-				return nil, err
+				eg = append(eg, err.Error())
+				continue
 			}
 
 			p, err := factory.New(rawConfig)
 			if err != nil {
-				return nil, err
+				eg = append(eg, err.Error())
+				continue
 			}
 			processors = append(processors, Processor{
 				Name:      processorName,
@@ -59,5 +65,5 @@ func (c Config) NewProcessors() ([]Processor, error) {
 			})
 		}
 	}
-	return processors, nil
+	return processors, eg.Error()
 }

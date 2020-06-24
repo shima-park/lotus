@@ -33,6 +33,7 @@ func NewFactory() component.Factory {
 	return component.NewFactory(
 		defaultConfig,
 		description,
+		reflect.TypeOf(&redis.Client{}),
 		func(c string) (component.Component, error) {
 			return NewClient(c)
 		})

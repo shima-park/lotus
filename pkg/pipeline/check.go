@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"github.com/shima-park/lotus/pkg/common/inject"
 	"github.com/shima-park/lotus/pkg/processor"
 )
@@ -28,32 +29,32 @@ func check(s *Stream, inj inject.Injector) []error {
 
 	var errs []error
 	if err := processor.Validate(s.processor.Processor); err != nil {
-		errs = append(errs, fmt.Errorf("Stream(%s) %v", s.Name(), err))
+		errs = append(errs, err)
 		return errs
 	}
 
-	for _, err := range checkDep(inj, s.processor.Processor) {
-		errs = append(errs, fmt.Errorf("Stream(%s) %v", s.Name(), err))
+	for _, err := range checkDep(s.Name(), inj, s.processor.Processor) {
+		errs = append(errs, err)
 	}
 
 	for i := 0; i < len(s.childs); i++ {
 		for _, err := range check(s.childs[i], inj) {
-			errs = append(errs, fmt.Errorf("Stream(%s) %v", s.Name(), err))
+			errs = append(errs, err)
 		}
 	}
 	return errs
 }
 
-func checkDep(inj inject.Injector, f interface{}) []error {
+func checkDep(name string, inj inject.Injector, f interface{}) []error {
 	t := reflect.TypeOf(f)
 
 	var errs []error
-	if err := checkIn(inj, t); err != nil {
-		errs = append(errs, err...)
+	for _, err := range checkIn(inj, t) {
+		errs = append(errs, errors.Wrapf(err, "Stream(%s)", name))
 	}
 
-	if err := checkOut(inj, t); err != nil {
-		errs = append(errs, err...)
+	for _, err := range checkOut(inj, t) {
+		errs = append(errs, errors.Wrapf(err, "Stream(%s)", name))
 	}
 
 	return errs
