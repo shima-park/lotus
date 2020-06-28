@@ -52,6 +52,7 @@ func (c WriterConfig) Marshal() ([]byte, error) {
 type Writer struct {
 	wc       io.WriteCloser
 	instance component.Instance
+	path     string
 }
 
 type nopCloser struct {
@@ -88,7 +89,8 @@ func NewWriter(rawConfig string) (*Writer, error) {
 	}
 
 	return &Writer{
-		wc: f,
+		path: conf.Path,
+		wc:   f,
 		instance: component.NewInstance(
 			conf.Name,
 			inject.InterfaceOf((*io.Writer)(nil)),
@@ -107,5 +109,10 @@ func (w *Writer) Start() error {
 }
 
 func (w *Writer) Stop() error {
-	return w.wc.Close()
+	switch strings.TrimSpace(w.path) {
+	case "/dev/null", "stdout", "stderr":
+		return nil
+	default:
+		return w.wc.Close()
+	}
 }

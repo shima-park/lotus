@@ -49,6 +49,7 @@ func (c ReaderConfig) Marshal() ([]byte, error) {
 }
 
 type Reader struct {
+	path     string
 	rc       io.ReadCloser
 	instance component.Instance
 }
@@ -77,7 +78,8 @@ func NewReader(rawConfig string) (*Reader, error) {
 	}
 
 	return &Reader{
-		rc: f,
+		path: conf.Path,
+		rc:   f,
 		instance: component.NewInstance(
 			conf.Name,
 			inject.InterfaceOf((*io.Reader)(nil)),
@@ -96,5 +98,10 @@ func (r *Reader) Start() error {
 }
 
 func (r *Reader) Stop() error {
-	return r.rc.Close()
+	switch strings.TrimSpace(r.path) {
+	case "stdin", "stdout", "stderr":
+		return nil
+	default:
+		return r.rc.Close()
+	}
 }
