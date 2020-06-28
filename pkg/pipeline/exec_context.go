@@ -10,6 +10,7 @@ import (
 
 	"errors"
 
+	circuit "github.com/rubyist/circuitbreaker"
 	"github.com/shima-park/lotus/pkg/common/inject"
 	"github.com/shima-park/lotus/pkg/common/log"
 	"github.com/shima-park/lotus/pkg/common/monitor"
@@ -21,9 +22,9 @@ type execContext struct {
 	injector inject.Injector
 	stream   *Stream
 	monitor  monitor.Monitor
-
-	inputC chan inject.Injector
-	wg     sync.WaitGroup
+	breaker  *circuit.Breaker
+	inputC   chan inject.Injector
+	wg       sync.WaitGroup
 }
 
 func (c *execContext) Start() error {
@@ -100,16 +101,21 @@ func (c *execContext) runStream(s *Stream, inputC, outputC chan inject.Injector,
 	c.wg.Add(1)
 	go func() {
 		defer s.Recover(func() {
-			moni.Add(METRICS_KEY_STREAM_RUNNING, -1)
+			moni.Add(METRICS_KEY_STREAM_RUNNING_REPLICA, -1)
 			moni.Set(METRICS_KEY_STREAM_EXIT_TIME, monitor.Time(time.Now()))
 			closeFunc()
 			c.wg.Done()
 		})
 
 		moni.Set(METRICS_KEY_STREAM_START_TIME, monitor.Time(time.Now()))
-		moni.Add(METRICS_KEY_STREAM_RUNNING, 1)
+		moni.Add(METRICS_KEY_STREAM_RUNNING_REPLICA, 1)
 		var elapsed time.Duration
 		for inj := range inputC {
+			if !c.breaker.Ready() { // 熔断器打开
+				moni.Add(METRICS_KEY_STREAM_BREAKER_OPEN, 1)
+				time.Sleep(time.Second)
+				moni.Add(METRICS_KEY_STREAM_BREAKER_OPEN, -1)
+			}
 			moni.Set(METRICS_KEY_STREAM_LAST_START_TIME, monitor.Time(time.Now()))
 			moni.Add(METRICS_KEY_STREAM_RUN_TIMES, 1)
 			inj.MapTo(moni, "Monitor", (*monitor.Monitor)(nil))
@@ -124,8 +130,12 @@ func (c *execContext) runStream(s *Stream, inputC, outputC chan inject.Injector,
 			newInj, err := handleResult(s.Name(), inj, val, err)
 			if err != nil {
 				moni.Add(METRICS_KEY_STREAM_ERROR_COUNT, 1)
+				moni.Set(METRICS_KEY_STREAM_ERROR, monitor.String(err.Error()))
+				c.breaker.Fail()
 				continue
 			}
+			c.breaker.Success()
+
 			// 有些流程没有子流程, 不能根据塞入队列成功来判断
 			moni.Add(METRICS_KEY_STREAM_SUCCESS_COUNT, 1)
 

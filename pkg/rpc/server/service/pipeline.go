@@ -3,10 +3,12 @@ package service
 import (
 	"bytes"
 	"errors"
+	"expvar"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/shima-park/lotus/pkg/component"
@@ -33,12 +35,14 @@ func NewPipelineService(metadata proto.Metadata,
 	}
 }
 
-func (s *pipelineService) GenerateConfig(name, schedule string, components, processors []string) (*pipeline.Config, error) {
+func (s *pipelineService) GenerateConfig(name string, opts ...proto.ConfigOption) (*pipeline.Config, error) {
+	options := proto.NewConfigOptions(opts...)
+
 	dependencyMap := map[string][]string{} // key:type value:inject_name
 	var processorConfigs []map[string]string
 	streamConfig := &pipeline.StreamConfig{}
 	t := streamConfig
-	for i, name := range processors {
+	for i, name := range options.Processors {
 		name = strings.TrimSpace(name)
 		f, err := processor.GetFactory(name)
 		if err != nil {
@@ -46,7 +50,7 @@ func (s *pipelineService) GenerateConfig(name, schedule string, components, proc
 		}
 
 		t.Name = name
-		if i != len(processors)-1 { // 防止加上最后一个空childs
+		if i != len(options.Processors)-1 { // 防止加上最后一个空childs
 			t.Childs = []pipeline.StreamConfig{
 				pipeline.StreamConfig{},
 			}
@@ -66,7 +70,7 @@ func (s *pipelineService) GenerateConfig(name, schedule string, components, proc
 
 	dependencyUsedMap := map[string]int{} // key:type value:index
 	var componentConfigs []map[string]string
-	for _, name := range components {
+	for _, name := range options.Components {
 		name = strings.TrimSpace(name)
 		f, err := component.GetFactory(name)
 		if err != nil {
@@ -94,11 +98,14 @@ func (s *pipelineService) GenerateConfig(name, schedule string, components, proc
 	}
 
 	conf := &pipeline.Config{
-		Name:       name,
-		Schedule:   schedule,
-		Components: componentConfigs,
-		Processors: processorConfigs,
-		Stream:     *streamConfig,
+		Name:                  name,
+		Schedule:              options.Schedule,
+		CircuitBreakerSamples: options.CircuitBreakerSamples,
+		CircuitBreakerRate:    options.CircuitBreakerRate,
+		Bootstrap:             options.Bootstrap,
+		Components:            componentConfigs,
+		Processors:            processorConfigs,
+		Stream:                *streamConfig,
 	}
 
 	return conf, nil
@@ -230,21 +237,36 @@ func (s *pipelineService) Visualize(name string, format proto.VisualizeFormat) (
 }
 
 func convertPipeliner2PipelineView(p *PipelineWithError) *proto.PipelineView {
+	var streamError string
+	var streamErrorCount int
+	p.Monitor().Do(func(namespace string, kv expvar.KeyValue) {
+		switch kv.Key {
+		case pipeline.METRICS_KEY_STREAM_ERROR:
+			streamError = kv.Value.String()
+		case pipeline.METRICS_KEY_STREAM_ERROR_COUNT:
+			i, _ := strconv.Atoi(kv.Value.String())
+			streamErrorCount += i
+		}
+
+	})
+
 	return &proto.PipelineView{
-		Name:          p.Name(),
-		State:         p.State().String(),
-		Schedule:      p.GetConfig().Schedule,
-		Bootstrap:     p.GetConfig().Bootstrap,
-		StartTime:     p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_START_TIME).String(),
-		ExitTime:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_EXIT_TIME).String(),
-		RunTimes:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_RUN_TIMES).String(),
-		NextRunTime:   p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_NEXT_RUN_TIME).String(),
-		LastStartTime: p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_START_TIME).String(),
-		LastEndTime:   p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_END_TIME).String(),
-		Components:    convertComponents(p.ListComponents()),
-		Processors:    convertProcessors(p.ListProcessors()),
-		RawConfig:     mustMarshalConfig(p.GetConfig()),
-		Error:         p.Error,
+		Name:             p.Name(),
+		State:            p.State().String(),
+		Schedule:         p.GetConfig().Schedule,
+		Bootstrap:        p.GetConfig().Bootstrap,
+		StartTime:        p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_START_TIME).String(),
+		ExitTime:         p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_EXIT_TIME).String(),
+		RunTimes:         p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_RUN_TIMES).String(),
+		NextRunTime:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_NEXT_RUN_TIME).String(),
+		LastStartTime:    p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_START_TIME).String(),
+		LastEndTime:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_END_TIME).String(),
+		Components:       convertComponents(p.ListComponents()),
+		Processors:       convertProcessors(p.ListProcessors()),
+		RawConfig:        mustMarshalConfig(p.GetConfig()),
+		Error:            p.Error,
+		StreamError:      streamError,
+		StreamErrorCount: streamErrorCount,
 	}
 }
 

@@ -9,7 +9,7 @@ import (
 
 func (s *Server) setRouter() {
 	r := s.engine
-	r.GET("/pipeline/generate-config", s.generateConfig)
+	r.POST("/pipeline/generate-config", s.generateConfig)
 	r.POST("/pipeline/add", s.addPipeline)
 	r.POST("/pipeline/remove", s.removePipeline)
 	r.POST("/pipeline/recreate", s.recreatePipeline)

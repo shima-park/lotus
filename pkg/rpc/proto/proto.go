@@ -24,20 +24,22 @@ type Result struct {
 }
 
 type PipelineView struct {
-	Name          string          `json:"name"`
-	State         string          `json:"state"`
-	Schedule      string          `json:"schedule"`
-	Bootstrap     bool            `json:"bootstrap"`
-	StartTime     string          `json:"start_time"`
-	ExitTime      string          `json:"exit_time"`
-	RunTimes      string          `json:"run_times"`
-	NextRunTime   string          `json:"next_run_time"`
-	LastStartTime string          `json:"last_start_time"`
-	LastEndTime   string          `json:"last_end_time"`
-	Components    []ComponentView `json:"components,omitempty"`
-	Processors    []ProcessorView `json:"processors,omitempty"`
-	RawConfig     []byte          `json:"raw_config,omitempty"`
-	Error         string          `json:"error,omitempty"`
+	Name             string          `json:"name"`
+	State            string          `json:"state"`
+	Schedule         string          `json:"schedule"`
+	Bootstrap        bool            `json:"bootstrap"`
+	StartTime        string          `json:"start_time"`
+	ExitTime         string          `json:"exit_time"`
+	RunTimes         string          `json:"run_times"`
+	NextRunTime      string          `json:"next_run_time"`
+	LastStartTime    string          `json:"last_start_time"`
+	LastEndTime      string          `json:"last_end_time"`
+	Components       []ComponentView `json:"components"`
+	Processors       []ProcessorView `json:"processors"`
+	RawConfig        []byte          `json:"raw_config"`
+	Error            string          `json:"error"`
+	StreamError      string          `json:"stream_error"`
+	StreamErrorCount int             `json:"stream_error_count"`
 }
 
 type ComponentView struct {
@@ -73,4 +75,14 @@ type MetadataView struct {
 
 type PluginOpenRequest struct {
 	Path string `json:"path"`
+}
+
+type GenerateConfigRequest struct {
+	Name                  string   `json:"name"`
+	Schedule              string   `json:"schedule"`
+	CircuitBreakerSamples int64    `json:"circuit_breaker_samples"`
+	CircuitBreakerRate    float64  `json:"circuit_breaker_rate"`
+	Bootstrap             bool     `json:"bootstrap"`
+	Components            []string `json:"components"`
+	Processors            []string `json:"processors"`
 }

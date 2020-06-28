@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
+	circuit "github.com/rubyist/circuitbreaker"
 	"github.com/shima-park/lotus/pkg/common/inject"
 	"github.com/shima-park/lotus/pkg/common/log"
 	"github.com/shima-park/lotus/pkg/common/monitor"
@@ -197,6 +197,7 @@ func (p *pipeliner) newExecContext() *execContext {
 		injector: inj,
 		stream:   p.stream,
 		monitor:  p.monitor,
+		breaker:  circuit.NewRateBreaker(p.config.CircuitBreakerRate, p.config.CircuitBreakerSamples),
 		inputC:   make(chan inject.Injector, p.stream.config.BufferSize),
 	}
 

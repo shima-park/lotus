@@ -6,12 +6,14 @@ import (
 )
 
 type Config struct {
-	Name       string              `yaml:"name"`
-	Schedule   string              `yaml:"schedule"`   // 调度计划，为空时死循环调度，可以传入cron表达式调度
-	Bootstrap  bool                `yaml:"bootstrap"`  // 随进程启动而启动
-	Components []map[string]string `yaml:"components"` // key: name, value: rawConfig
-	Processors []map[string]string `yaml:"processors"` // key: name, value: rawConfig
-	Stream     StreamConfig        `yaml:"stream"`     // key: name, value: StreamConfig
+	Name                  string              `yaml:"name"`
+	Schedule              string              `yaml:"schedule"`                // 调度计划，为空时死循环调度，可以传入cron表达式调度
+	CircuitBreakerSamples int64               `yaml:"circuit_breaker_samples"` // 熔断器采样数, 防止stream出现异常耗尽cpu资源
+	CircuitBreakerRate    float64             `yaml:"circuit_breaker_rate"`    // 熔断器采样率
+	Bootstrap             bool                `yaml:"bootstrap"`               // 随进程启动而启动
+	Components            []map[string]string `yaml:"components"`              // key: name, value: rawConfig
+	Processors            []map[string]string `yaml:"processors"`              // key: name, value: rawConfig
+	Stream                StreamConfig        `yaml:"stream"`                  // key: name, value: StreamConfig
 }
 
 func (c Config) NewComponents() ([]Component, error) {

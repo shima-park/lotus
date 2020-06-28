@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/shima-park/lotus/pkg/pipeline"
+	"github.com/shima-park/lotus/pkg/rpc/proto"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -27,6 +28,7 @@ func NewAddPipelineCmd() *cobra.Command {
 	var file string
 	var name string
 	var schedule string
+	var bootstrap bool
 	var processors []string
 	var components []string
 	cmd := &cobra.Command{
@@ -49,7 +51,13 @@ func NewAddPipelineCmd() *cobra.Command {
 				handleErr(err)
 			} else if name != "" || len(processors) > 0 || len(components) > 0 {
 				c := newClient()
-				conf, err := c.Pipeline.GenerateConfig(name, schedule, components, processors)
+				conf, err := c.Pipeline.GenerateConfig(
+					name,
+					proto.WithSchedule(schedule),
+					proto.WithBootstrap(bootstrap),
+					proto.WithComponents(components),
+					proto.WithProcessor(processors),
+				)
 				handleErr(err)
 
 				origin, err := yaml.Marshal(conf)
@@ -66,6 +74,7 @@ func NewAddPipelineCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&file, "file", "f", "", "path to pipeline config")
 	cmd.Flags().StringVarP(&name, "name", "n", "", "name of pipeline")
 	cmd.Flags().StringVarP(&schedule, "schedule", "s", "", "name of pipeline")
+	cmd.Flags().BoolVarP(&bootstrap, "bootstrap", "b", false, "whether to start with the server")
 	cmd.Flags().StringSliceVarP(&processors, "processors", "p", nil, "processors of pipeline")
 	cmd.Flags().StringSliceVarP(&components, "components", "c", nil, "components of pipeline")
 

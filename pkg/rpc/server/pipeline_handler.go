@@ -1,8 +1,6 @@
 package server
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/shima-park/lotus/pkg/pipeline"
 	"github.com/shima-park/lotus/pkg/rpc/proto"
@@ -60,11 +58,21 @@ func (s *Server) ctrlPipeline(c *gin.Context) {
 }
 
 func (s *Server) generateConfig(c *gin.Context) {
-	name := c.Query("name")
-	schedule := c.Query("schedule")
-	components := strings.Split(c.Query("components"), ",")
-	processors := strings.Split(c.Query("processors"), ",")
-	config, err := s.Pipeline.GenerateConfig(name, schedule, components, processors)
+	var req proto.GenerateConfigRequest
+	if err := c.BindJSON(&req); err != nil {
+		Failed(c, err)
+		return
+	}
+
+	config, err := s.Pipeline.GenerateConfig(
+		req.Name,
+		proto.WithSchedule(req.Schedule),
+		proto.WithBootstrap(req.Bootstrap),
+		proto.WithComponents(req.Components),
+		proto.WithProcessor(req.Processors),
+		proto.WithCircuitBreakerRate(req.CircuitBreakerRate),
+		proto.WithCircuitBreakerSamples(req.CircuitBreakerSamples),
+	)
 	if err != nil {
 		Failed(c, err)
 		return

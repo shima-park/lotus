@@ -2,7 +2,6 @@ package client
 
 import (
 	"net/url"
-	"strings"
 
 	pipe "github.com/shima-park/lotus/pkg/pipeline"
 	"github.com/shima-park/lotus/pkg/rpc/proto"
@@ -43,14 +42,19 @@ func (p *pipeline) Find(name string) (*proto.PipelineView, error) {
 	return &res, err
 }
 
-func (p *pipeline) GenerateConfig(name, schedule string, components, processors []string) (*pipe.Config, error) {
-	vals := url.Values{}
-	vals.Add("name", name)
-	vals.Add("schedule", schedule)
-	vals.Add("components", strings.Join(components, ","))
-	vals.Add("processors", strings.Join(processors, ","))
+func (p *pipeline) GenerateConfig(name string, opts ...proto.ConfigOption) (*pipe.Config, error) {
+	options := proto.NewConfigOptions(opts...)
+	req := proto.GenerateConfigRequest{
+		Name:                  name,
+		Schedule:              options.Schedule,
+		CircuitBreakerSamples: options.CircuitBreakerSamples,
+		CircuitBreakerRate:    options.CircuitBreakerRate,
+		Bootstrap:             options.Bootstrap,
+		Components:            options.Components,
+		Processors:            options.Processors,
+	}
 	var config pipe.Config
-	err := GetJSON(p.api("/pipeline/generate-config?"+vals.Encode()), &config)
+	err := PostJSON(p.api("/pipeline/generate-config"), req, &config)
 	return &config, err
 }
 

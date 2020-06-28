@@ -78,17 +78,18 @@ func NewGetPipeCmd() *cobra.Command {
 			default:
 				var rows [][]string
 				for _, e := range filters {
-					rows = append(rows, []string{e.Name, e.State, e.Schedule, fmt.Sprint(e.Bootstrap),
-						e.StartTime, e.ExitTime, e.RunTimes, e.NextRunTime, e.LastStartTime, e.LastEndTime,
-						e.Error,
+					rows = append(rows, []string{
+						e.Name, e.State, e.Schedule, fmt.Sprint(e.Bootstrap),
+						e.RunTimes, e.StartTime, e.ExitTime,
+						e.Error, e.StreamError, fmt.Sprint(e.StreamErrorCount),
 					})
 				}
 
 				renderTable(
 					[]string{
-						"name", "state", "schedule", "bootstrap", "start_time", "exit_time",
-						"run_times", "next_run_time", "last_start_time", "last_end_time",
-						"error",
+						"name", "state", "schedule", "bootstrap",
+						"run_times", "start_time", "exit_time",
+						"error", "stream_error", "stream_error_count",
 					},
 					rows,
 				)

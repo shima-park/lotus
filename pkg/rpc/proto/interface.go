@@ -5,7 +5,7 @@ import (
 )
 
 type Pipeline interface {
-	GenerateConfig(name, schdule string, components, processors []string) (*pipe.Config, error)
+	GenerateConfig(name string, opts ...ConfigOption) (*pipe.Config, error)
 	Add(conf pipe.Config) error
 	Remove(names ...string) error
 	Recreate(conf pipe.Config) error

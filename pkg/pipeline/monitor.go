@@ -13,7 +13,7 @@ const (
 	METRICS_KEY_STREAM_BUFFER_SIZE     = "_stream_buffer_size"
 	METRICS_KEY_STREAM_REPLICA         = "_stream_replica"
 	METRICS_KEY_STREAM_RUN_TIMES       = "_stream_run_times"
-	METRICS_KEY_STREAM_RUNNING         = "_stream_running_replica"
+	METRICS_KEY_STREAM_RUNNING_REPLICA = "_stream_running_replica"
 	METRICS_KEY_STREAM_START_TIME      = "_stream_start_time"
 	METRICS_KEY_STREAM_EXIT_TIME       = "_stream_exit_time"
 	METRICS_KEY_STREAM_LAST_START_TIME = "_stream_last_start_time"
@@ -21,4 +21,6 @@ const (
 	METRICS_KEY_STREAM_SUCCESS_COUNT   = "_stream_success_count"
 	METRICS_KEY_STREAM_ERROR_COUNT     = "_stream_error_count"
 	METRICS_KEY_STREAM_ELAPSED         = "_stream_elapsed"
+	METRICS_KEY_STREAM_BREAKER_OPEN    = "_stream_breaker_open"
+	METRICS_KEY_STREAM_ERROR           = "_stream_error"
 )
