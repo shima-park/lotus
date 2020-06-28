@@ -49,5 +49,5 @@ func (c *Server) Serve() error {
 }
 
 func (c *Server) Stop() {
-	c.Stop()
+	_ = c.Service.Stop()
 }

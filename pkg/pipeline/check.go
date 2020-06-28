@@ -33,14 +33,10 @@ func check(s *Stream, inj inject.Injector) []error {
 		return errs
 	}
 
-	for _, err := range checkDep(s.Name(), inj, s.processor.Processor) {
-		errs = append(errs, err)
-	}
+	errs = append(errs, checkDep(s.Name(), inj, s.processor.Processor)...)
 
 	for i := 0; i < len(s.childs); i++ {
-		for _, err := range check(s.childs[i], inj) {
-			errs = append(errs, err)
-		}
+		errs = append(errs, check(s.childs[i], inj)...)
 	}
 	return errs
 }

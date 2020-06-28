@@ -34,10 +34,10 @@ type PipelineView struct {
 	NextRunTime   string          `json:"next_run_time"`
 	LastStartTime string          `json:"last_start_time"`
 	LastEndTime   string          `json:"last_end_time"`
-	Components    []ComponentView `json:"components,emitempty"`
-	Processors    []ProcessorView `json:"processors,emitempty"`
-	RawConfig     []byte          `json:"raw_config,emitempty"`
-	Error         string          `json:"error,emitempty"`
+	Components    []ComponentView `json:"components,omitempty"`
+	Processors    []ProcessorView `json:"processors,omitempty"`
+	RawConfig     []byte          `json:"raw_config,omitempty"`
+	Error         string          `json:"error,omitempty"`
 }
 
 type ComponentView struct {

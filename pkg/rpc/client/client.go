@@ -10,8 +10,6 @@ type Client struct {
 	proto.Processor
 	proto.Plugin
 	proto.Server
-
-	addr string
 }
 
 func NewClient(addr string) *Client {

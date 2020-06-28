@@ -45,7 +45,7 @@ func NewMetadata(metapath string) (proto.Metadata, error) {
 
 	err := os.MkdirAll(metapath, 0750)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to create data path %s: %v", metapath)
+		return nil, errors.Wrapf(err, "Failed to create data path %s", metapath)
 	}
 
 	_, err = os.Stat(m.metafile)
@@ -152,9 +152,7 @@ func (m *metadata) ListPaths(ft proto.FileType) []string {
 
 	paths, ok := m.paths[ft]
 	if ok {
-		for _, path := range paths {
-			ret = append(ret, path)
-		}
+		ret = append(ret, paths...)
 	}
 
 	return ret

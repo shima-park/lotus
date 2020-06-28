@@ -12,7 +12,10 @@ import (
 )
 
 func init() {
-	pipeline.AddVisualizer("term", TermVisualizer)
+	err := pipeline.AddVisualizer("term", TermVisualizer)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func TermVisualizer(w io.Writer, pipeline pipeline.Pipeliner) error {

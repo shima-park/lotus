@@ -50,7 +50,7 @@ func (c *plugin) Add(path string) error {
 	if err != nil {
 		return err
 	}
-	part.Write(fileContents)
+	_, _ = part.Write(fileContents)
 
 	err = writer.Close()
 	if err != nil {
