@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/shima-park/lotus/pkg/pipeline"
 	"github.com/spf13/cobra"
@@ -31,11 +30,14 @@ func NewAddPipelineCmd() *cobra.Command {
 	var processors []string
 	var components []string
 	cmd := &cobra.Command{
-		Use:     "pipeline (NAME)",
+		Use:     "pipeline (PATH | URL | -n PIPELINE_NAME -p PROCESSOR_NAME -c COMPONENT_NAME)",
 		Aliases: []string{"pipe"},
 		Short:   "Add a pipeline to the server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if file != "" {
+				file, err := tryDownloadAndCheckPath(file)
+				handleErr(err)
+
 				data, err := ioutil.ReadFile(file)
 				handleErr(err)
 
@@ -54,9 +56,7 @@ func NewAddPipelineCmd() *cobra.Command {
 				handleErr(err)
 
 				err = runEditor(origin, c.Pipeline.Add)
-				if err != nil {
-					handleErr(err)
-				}
+				handleErr(err)
 			} else {
 				fmt.Println("-f pipeline.yaml or -n test -p read_line -c es_client you at least provide one of them")
 			}
@@ -74,31 +74,26 @@ func NewAddPipelineCmd() *cobra.Command {
 
 func NewAddPluginCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "plugin (PATH)",
+		Use:     "plugin (PATH | URL)",
 		Aliases: []string{"plug"},
 		Short:   "Add a plugin to the server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				handleErr(errors.New("You must provide a plugin path"))
 			}
+
+			var paths []string
 			for _, path := range args {
-				_, err := os.Lstat(path)
-				if os.IsNotExist(err) {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
+				path, err := tryDownloadAndCheckPath(path)
+				handleErr(err)
+
+				paths = append(paths, path)
 			}
+
 			c := newClient()
-			for _, path := range args {
+			for _, path := range paths {
 				err := c.Plugin.Add(path)
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
+				handleErr(err)
 			}
 		},
 	}
