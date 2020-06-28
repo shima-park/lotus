@@ -259,7 +259,6 @@ func NewGetProcCmd() *cobra.Command {
 }
 
 func NewGetPluginCmd() *cobra.Command {
-	var p string
 	cmd := &cobra.Command{
 		Use:     "plugin",
 		Aliases: []string{"plug"},
@@ -274,17 +273,15 @@ func NewGetPluginCmd() *cobra.Command {
 					continue
 				}
 				rows = append(rows, []string{
-					e.Name, e.Path, e.Module, e.OpenTime,
+					e.Name, e.Path, e.Module, e.OpenTime, fmt.Sprint(e.IsRemoved),
 				})
 			}
 
-			header := []string{"name", "path", "module", "open_time"}
+			header := []string{"name", "path", "module", "open_time", "is_removed"}
 
 			renderTable(header, rows)
 		},
 	}
-
-	cmd.Flags().StringVar(&p, "p", "", "The pipeline scope for this CLI request")
 
 	return cmd
 }

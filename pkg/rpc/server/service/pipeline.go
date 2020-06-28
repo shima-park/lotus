@@ -72,11 +72,12 @@ func (s *pipelineService) GenerateConfig(name, schedule string, components, proc
 		if err != nil {
 			return nil, err
 		}
+		typeStr := f.ExampleType().String()
 
 		// 设置component的注入名字和processor一致
 		config := f.SampleConfig()
-		if injectNames, ok := dependencyMap[f.ExampleType().String()]; ok {
-			i := dependencyUsedMap[f.ExampleType().String()]
+		if injectNames, ok := dependencyMap[typeStr]; ok {
+			i := dependencyUsedMap[typeStr]
 			var injectName string
 			if i < len(injectNames) {
 				injectName = injectNames[i]
@@ -84,7 +85,7 @@ func (s *pipelineService) GenerateConfig(name, schedule string, components, proc
 				injectName = injectNames[len(injectNames)-1]
 			}
 			config = setInjectName(injectName, config)
-			dependencyUsedMap[f.ExampleType().String()]++
+			dependencyUsedMap[typeStr]++
 		}
 
 		componentConfigs = append(componentConfigs, map[string]string{

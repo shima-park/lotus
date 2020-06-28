@@ -18,14 +18,16 @@ func NewPluginService(metadata proto.Metadata) proto.Plugin {
 func (s *pluginService) List() ([]proto.PluginView, error) {
 	var res []proto.PluginView
 	for _, p := range plugin.List() {
+		var isRemoved bool
 		if !s.metadata.ExistsPath(proto.FileTypePlugin, p.Path) {
-			continue
+			isRemoved = true
 		}
 		res = append(res, proto.PluginView{
-			Name:     p.Name,
-			Path:     p.Path,
-			Module:   p.Module,
-			OpenTime: p.OpenTime.Format("2006-01-02 15:04:05"),
+			Name:      p.Name,
+			Path:      p.Path,
+			Module:    p.Module,
+			OpenTime:  p.OpenTime.Format("2006-01-02 15:04:05"),
+			IsRemoved: isRemoved,
 		})
 	}
 	return res, nil
