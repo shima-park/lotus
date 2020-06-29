@@ -34,6 +34,10 @@ func (s *Server) setRouter() {
 			PluginPaths:         s.metadata.ListPaths(proto.FileTypePlugin),
 			PipelineConfigPaths: s.metadata.ListPaths(proto.FileTypePipelineConfig),
 			HTTPAddr:            s.options.HTTPAddr,
+			Version:             s.options.Version,
+			Branch:              s.options.Branch,
+			Commit:              s.options.Commit,
+			Built:               s.options.Built,
 		})
 	})
 }

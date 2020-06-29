@@ -1,6 +1,13 @@
+BUILT=`date -u '+%Y-%m-%d_%H:%M:%S'`
+COMMIT=`git rev-parse HEAD`
+VERSION=`git describe --tags|sed -e "s/\-/\./g"`
+BRANCH=`git rev-parse --abbrev-ref HEAD`
+LDFLAGS=-ldflags "-w -s -X main.VERSION=$(VERSION) -X main.BRANCH=$(BRANCH) \
+-X main.COMMIT=$(COMMIT) -X main.BUILT=$(BUILT)"
+
 .PHONY: build-ctl
 build-ctl:
-	go build -o lotusctl -trimpath cmd/lotusctl/main.go
+	go build $(LDFLAGS) -o lotusctl -trimpath cmd/lotusctl/main.go
 
 .PHONY: build-srv
 build-srv:

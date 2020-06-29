@@ -15,7 +15,22 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
+func Execute(version, branch, commit, built string) {
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "show version information",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Version: %s\n", version)
+			fmt.Printf("Branch: %s\n", branch)
+			fmt.Printf("Commit: %s\n", commit)
+			fmt.Printf("Built: %s\n", built)
+		},
+	})
+
+	rootCmd.AddCommand(
+		NewCmdServer(NewCmdServerRun(version, branch, commit, built)),
+	)
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

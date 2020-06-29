@@ -71,6 +71,10 @@ type MetadataView struct {
 	PluginPaths         []string `json:"plugin_paths" yaml:"plugin_paths"`
 	PipelineConfigPaths []string `json:"pipeline_config_paths" yaml:"pipeline_config_paths"`
 	HTTPAddr            string   `json:"http_addr" yaml:"http_addr"`
+	Version             string   `json:"version" yaml:"version"`
+	Branch              string   `json:"branch" yaml:"branch"`
+	Commit              string   `json:"commit" yaml:"commit"`
+	Built               string   `json:"built" yaml:"built"`
 }
 
 type PluginOpenRequest struct {

@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	var cmdServer = &cobra.Command{
+func NewCmdServer(cmds ...*cobra.Command) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:     "server",
 		Aliases: []string{"serv", "srv"},
 		Short:   "Commands to control server",
@@ -17,16 +17,25 @@ func init() {
 			_ = cmd.Help()
 		},
 	}
+	cmd.AddCommand(cmds...)
 
+	return cmd
+}
+
+func NewCmdServerRun(version, branch, commit, built string) *cobra.Command {
 	var metaPath string
 	var httpAddr string
-	var cmdRunServer = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "run a lotus server",
 		Run: func(cmd *cobra.Command, args []string) {
 			c, err := server.New(
 				server.HTTPAddr(httpAddr),
 				server.MetadataPath(metaPath),
+				server.Version(version),
+				server.Branch(branch),
+				server.Commit(commit),
+				server.Built(built),
 			)
 			if err != nil {
 				panic(err)
@@ -43,10 +52,7 @@ func init() {
 			c.Stop()
 		},
 	}
-	cmdRunServer.Flags().StringVar(&metaPath, "meta", "", "path to metadata")
-	cmdRunServer.Flags().StringVar(&httpAddr, "http", "", "listen on address")
-
-	cmdServer.AddCommand(cmdRunServer)
-
-	rootCmd.AddCommand(cmdServer)
+	cmd.Flags().StringVar(&metaPath, "meta", "", "path to metadata")
+	cmd.Flags().StringVar(&httpAddr, "http", "", "listen on address")
+	return cmd
 }
