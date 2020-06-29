@@ -164,14 +164,6 @@ func (m *metadata) addPath(path string, pattern string, ft proto.FileType) error
 		return nil
 	}
 
-	if !filepath.IsAbs(path) {
-		var err error
-		path, err = filepath.Abs(path)
-		if err != nil {
-			return err
-		}
-	}
-
 	fi, err := os.Stat(path)
 	if err != nil {
 		return err

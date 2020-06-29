@@ -218,7 +218,6 @@ func (s *pipelineService) getConfigPath(name string) string {
 		name = name + defaultConfigSuffix
 	}
 	path := s.metadata.GetPath(proto.FileTypePipelineConfig, name)
-	path, _ = filepath.Abs(path) // GetPath返回的是相对路径，RemovePath时匹配的时绝对路径
 	return path
 }
 
