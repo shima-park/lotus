@@ -34,6 +34,7 @@ type Pipeliner interface {
 	SetConfig(config Config) error
 	Visualize(w io.Writer, format string) error
 	CheckDependence() []error
+	Error() error
 }
 
 type Component struct {
@@ -73,16 +74,7 @@ type pipeliner struct {
 	errs []error
 }
 
-func NewPipelineByConfig(conf Config) (Pipeliner, error) {
-	p := newPipelineByConfig(conf)
-	var err error
-	if len(p.errs) > 0 {
-		err = p.errs[0]
-	}
-	return p, err
-}
-
-func newPipelineByConfig(conf Config) *pipeliner {
+func NewPipelineByConfig(conf Config) Pipeliner {
 	ctx, cancel := context.WithCancel(context.Background())
 	p := &pipeliner{
 		config: conf,
@@ -209,6 +201,16 @@ func (p *pipeliner) Start() error {
 		return nil
 	}
 
+	if err := p.start(); err != nil {
+		p.errs = append(p.errs, err)
+		atomic.CompareAndSwapInt32(&p.state, int32(Running), int32(Exited))
+		return err
+	}
+
+	return nil
+}
+
+func (p *pipeliner) start() error {
 	for _, c := range p.components {
 		if err := c.Component.Start(); err != nil {
 			return err
@@ -331,4 +333,8 @@ func (p *pipeliner) GetConfig() Config {
 
 func (p *pipeliner) SetConfig(Config) error {
 	return errors.New("Unimplemented method")
+}
+
+func (p *pipeliner) Error() error {
+	return ErrorGroup(p.errs).Error()
 }

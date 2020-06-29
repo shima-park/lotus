@@ -63,7 +63,7 @@ func NewAddPipelineCmd() *cobra.Command {
 				origin, err := yaml.Marshal(conf)
 				handleErr(err)
 
-				err = runEditor(origin, c.Pipeline.Add)
+				err = runEditor(origin, c.Pipeline.Add, true)
 				handleErr(err)
 			} else {
 				fmt.Println("-f pipeline.yaml or -n test -p read_line -c es_client you at least provide one of them")

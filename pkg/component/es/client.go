@@ -2,6 +2,7 @@ package es
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/shima-park/lotus/pkg/common/log"
 	"github.com/shima-park/lotus/pkg/component"
@@ -14,7 +15,7 @@ var (
 	factory       component.Factory   = NewFactory()
 	_             component.Component = &Client{}
 	defaultConfig                     = Config{
-		Name: "my_es_client",
+		Name: "es_client",
 		Addr: "127.0.0.1:9200",
 	}
 	description = "es client factory"
@@ -61,7 +62,12 @@ func NewClient(rawConfig string) (*Client, error) {
 
 	var options []elastic.ClientOptionFunc
 	if conf.Addr != "" {
-		options = append(options, elastic.SetURL(conf.Addr))
+		url := conf.Addr
+		if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+			url = "http://" + url
+		}
+
+		options = append(options, elastic.SetURL(url))
 	}
 
 	c, err := elastic.NewClient(options...)

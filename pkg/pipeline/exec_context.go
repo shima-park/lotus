@@ -3,12 +3,11 @@ package pipeline
 import (
 	"context"
 	"expvar"
-	"fmt"
 	"reflect"
 	"sync"
 	"time"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	circuit "github.com/rubyist/circuitbreaker"
 	"github.com/shima-park/lotus/pkg/common/inject"
@@ -129,6 +128,7 @@ func (c *execContext) runStream(s *Stream, inputC, outputC chan inject.Injector,
 
 			newInj, err := handleResult(s.Name(), inj, val, err)
 			if err != nil {
+				log.Error(err.Error())
 				moni.Add(METRICS_KEY_STREAM_ERROR_COUNT, 1)
 				moni.Set(METRICS_KEY_STREAM_ERROR, monitor.String(err.Error()))
 				c.breaker.Fail()
@@ -154,21 +154,17 @@ func (c *execContext) runStream(s *Stream, inputC, outputC chan inject.Injector,
 
 func handleResult(name string, inj inject.Injector, val reflect.Value, err error) (inject.Injector, error) {
 	if err != nil {
-		log.Error("Stream: %s, Invoke error: %s", name, err)
-		return nil, err
+		return nil, errors.Wrapf(err, "Stream: %s", name)
 	}
 
 	if !val.IsValid() {
-		err = fmt.Errorf("Stream: %s Return values is not valid", name)
-		log.Error(err.Error())
-		return nil, err
+		return nil, errors.Errorf("Stream: %s, Return values is not valid", name)
 	}
 
 	newInj := inject.New()
 	newInj.SetParent(inj)
 	if err := newInj.MapValues(val); err != nil {
-		log.Error("Stream: %s, SetInjector error: %s", name, err)
-		return nil, err
+		return nil, errors.Errorf("Stream: %s, MapValues error: %s", name, err)
 	}
 
 	return newInj, nil

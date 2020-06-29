@@ -41,14 +41,14 @@ func NewEditPipeCmd() *cobra.Command {
 			pipe, err := c.Pipeline.Find(args[0])
 			handleErr(err)
 
-			err = runEditor(pipe.RawConfig, c.Pipeline.Recreate)
+			err = runEditor(pipe.RawConfig, c.Pipeline.Recreate, false)
 			handleErr(err)
 		},
 	}
 	return cmd
 }
 
-func runEditor(origin []byte, callback func(pipeline.Config) error) error {
+func runEditor(origin []byte, callback func(pipeline.Config) error, isAdd bool) error {
 	edit := editor.NewDefaultEditor([]string{"EDITOR"})
 	buff := bytes.NewBuffer(origin)
 	edited, path, err := edit.LaunchTempFile("edit-", "", buff)
@@ -57,7 +57,7 @@ func runEditor(origin []byte, callback func(pipeline.Config) error) error {
 	}
 	defer os.Remove(path)
 
-	if bytes.Equal(origin, edited) {
+	if !isAdd && bytes.Equal(origin, edited) {
 		fmt.Println("Edit cancelled, no changes made.")
 		return nil
 	}

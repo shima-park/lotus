@@ -6,12 +6,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ErrorGroup []string
+type ErrorGroup []error
 
 func (eg ErrorGroup) Error() error {
 	if len(eg) == 0 {
 		return nil
 	}
 
-	return errors.New(strings.Join(eg, ""))
+	var errs []string
+	for _, err := range eg {
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	return errors.New(strings.Join(errs, ", "))
 }

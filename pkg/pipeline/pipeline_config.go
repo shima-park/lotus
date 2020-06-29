@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"github.com/pkg/errors"
 	"github.com/shima-park/lotus/pkg/component"
 	"github.com/shima-park/lotus/pkg/processor"
 )
@@ -23,12 +24,12 @@ func (c Config) NewComponents() ([]Component, error) {
 		for componentName, rawConfig := range name2config {
 			factory, err := component.GetFactory(componentName)
 			if err != nil {
-				eg = append(eg, err.Error())
+				eg = append(eg, errors.Wrapf(err, "Component: %s", componentName))
 				continue
 			}
 			c, err := factory.New(rawConfig)
 			if err != nil {
-				eg = append(eg, err.Error())
+				eg = append(eg, errors.Wrapf(err, "Component: %s", componentName))
 				continue
 			}
 			components = append(components, Component{
@@ -50,13 +51,13 @@ func (c Config) NewProcessors() ([]Processor, error) {
 		for processorName, rawConfig := range name2config {
 			factory, err := processor.GetFactory(processorName)
 			if err != nil {
-				eg = append(eg, err.Error())
+				eg = append(eg, errors.Wrapf(err, "Processor: %s", processorName))
 				continue
 			}
 
 			p, err := factory.New(rawConfig)
 			if err != nil {
-				eg = append(eg, err.Error())
+				eg = append(eg, errors.Wrapf(err, "Processor: %s", processorName))
 				continue
 			}
 			processors = append(processors, Processor{

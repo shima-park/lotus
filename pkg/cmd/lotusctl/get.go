@@ -163,17 +163,17 @@ func NewGetCompCmd() *cobra.Command {
 				for _, e := range filters {
 					if p == "" {
 						rows = append(rows, []string{
-							e.Name, e.SampleConfig, e.Description, e.InjectName, e.ReflectType,
+							e.Name, e.SampleConfig, e.Description, e.ReflectType, e.InjectName,
 						})
 					} else {
 						rows = append(rows, []string{
-							e.Name, e.RawConfig, e.Description, e.InjectName, e.ReflectType,
+							e.Name, e.RawConfig, e.Description, e.ReflectType, e.InjectName,
 						})
 					}
 				}
 
 				header := []string{
-					"name", "config", "desc", "inject_name", "reflect_type",
+					"name", "config", "desc", "reflect_type", "inject_name",
 				}
 
 				renderTable(header, rows)

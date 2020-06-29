@@ -236,7 +236,7 @@ func (s *pipelineService) Visualize(name string, format proto.VisualizeFormat) (
 	return buff.Bytes(), nil
 }
 
-func convertPipeliner2PipelineView(p *PipelineWithError) *proto.PipelineView {
+func convertPipeliner2PipelineView(p pipeline.Pipeliner) *proto.PipelineView {
 	var streamError string
 	var streamErrorCount int
 	p.Monitor().Do(func(namespace string, kv expvar.KeyValue) {
@@ -251,20 +251,25 @@ func convertPipeliner2PipelineView(p *PipelineWithError) *proto.PipelineView {
 	})
 
 	return &proto.PipelineView{
-		Name:             p.Name(),
-		State:            p.State().String(),
-		Schedule:         p.GetConfig().Schedule,
-		Bootstrap:        p.GetConfig().Bootstrap,
-		StartTime:        p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_START_TIME).String(),
-		ExitTime:         p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_EXIT_TIME).String(),
-		RunTimes:         p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_RUN_TIMES).String(),
-		NextRunTime:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_NEXT_RUN_TIME).String(),
-		LastStartTime:    p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_START_TIME).String(),
-		LastEndTime:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_END_TIME).String(),
-		Components:       convertComponents(p.ListComponents()),
-		Processors:       convertProcessors(p.ListProcessors()),
-		RawConfig:        mustMarshalConfig(p.GetConfig()),
-		Error:            p.Error,
+		Name:          p.Name(),
+		State:         p.State().String(),
+		Schedule:      p.GetConfig().Schedule,
+		Bootstrap:     p.GetConfig().Bootstrap,
+		StartTime:     p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_START_TIME).String(),
+		ExitTime:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_EXIT_TIME).String(),
+		RunTimes:      p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_RUN_TIMES).String(),
+		NextRunTime:   p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_NEXT_RUN_TIME).String(),
+		LastStartTime: p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_START_TIME).String(),
+		LastEndTime:   p.Monitor().Get(pipeline.METRICS_KEY_PIPELINE_LAST_END_TIME).String(),
+		Components:    convertComponents(p.ListComponents()),
+		Processors:    convertProcessors(p.ListProcessors()),
+		RawConfig:     mustMarshalConfig(p.GetConfig()),
+		Error: func() string {
+			if p.Error() != nil {
+				return p.Error().Error()
+			}
+			return ""
+		}(),
 		StreamError:      streamError,
 		StreamErrorCount: streamErrorCount,
 	}

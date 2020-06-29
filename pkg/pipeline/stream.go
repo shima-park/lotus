@@ -161,14 +161,14 @@ func (f *Stream) Invoke(inj inject.Injector) (outVal reflect.Value, err error) {
 
 	err = processor.Validate(p)
 	if err != nil {
-		err = errors.Wrapf(err, "Stream(%s)", f.Name())
+		err = errors.Wrapf(err, "Stream: %s", f.Name())
 		return
 	}
 
 	var vals []reflect.Value
 	vals, err = inj.Invoke(p)
 	if err != nil {
-		err = errors.Wrapf(err, "Stream(%s)", f.Name())
+		err = errors.Wrapf(err, "Stream: %s", f.Name())
 		return
 	}
 

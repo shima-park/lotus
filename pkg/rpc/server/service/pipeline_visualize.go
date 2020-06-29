@@ -27,19 +27,22 @@ func TermVisualizer(w io.Writer, pipeline pipeline.Pipeliner) error {
 func printPipelineComponents(w io.Writer, p pipeline.Pipeliner) {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{
-		"Component Name", "Inject Name", "Reflect Type", "Reflect Value", "Description",
+		"Component Name", "Reflect Type", "Inject Name", "Raw Config", "Description",
 	})
 	table.SetRowLine(true)
 	for _, c := range p.ListComponents() {
 		arr := []string{
-			c.Name, c.Component.Instance().Name(), c.Component.Instance().Type().String(),
-			c.Component.Instance().Value().String(), c.Factory.Description(),
+			c.Name,
+			c.Component.Instance().Type().String(),
+			c.Component.Instance().Name(),
+			c.RawConfig,
+			c.Factory.Description(),
 		}
 
 		table.Rich(arr, []tablewriter.Colors{
 			tablewriter.Colors{},
-			tablewriter.Colors{tablewriter.Normal, tablewriter.FgGreenColor},
 			tablewriter.Colors{},
+			tablewriter.Colors{tablewriter.Normal, tablewriter.FgGreenColor},
 			tablewriter.Colors{},
 			tablewriter.Colors{},
 		})
@@ -53,60 +56,47 @@ func printPipelineProcessors(w io.Writer, p pipeline.Pipeliner) {
 
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"Processor Name", //"Config",
-		"Request struct name", "Request Field", "Request field type", "Request inject name",
-		"Response struct name", "Response Field", "Response field type", "Response inject name"})
+		"Struct name", "Field", "Reflect type", "Inject name"})
 	table.SetAutoMergeCells(true)
 	table.SetRowLine(true)
 	for _, p := range p.ListProcessors() {
 		requests, responses := getFuncReqAndRespReceptorList(p.Processor)
-		var i int
-		max := len(requests)
-		if max < len(responses) {
-			max = len(responses)
-		}
-		for i < max {
-			var arr = []string{p.Name} //p.Processor.RawConfig
 
-			var mdeErr *pipeline.MissingDependencyError
-			var req Receptor
-			if i < len(requests) {
-				req = requests[i]
-				mdeErr = matchError(mdeErrs, req)
-			}
-			arr = append(arr, req.StructName, req.StructFieldName, req.ReflectType, req.InjectName)
-
-			var resp Receptor
-			if i < len(responses) {
-				resp = responses[i]
-			}
-			arr = append(arr, resp.StructName, resp.StructFieldName, resp.ReflectType, resp.InjectName)
-
+		for _, req := range requests {
+			mdeErr := matchError(mdeErrs, req)
 			if mdeErr != nil {
-				table.Rich(arr, []tablewriter.Colors{
-					tablewriter.Colors{},
-					tablewriter.Colors{},
-					tablewriter.Colors{tablewriter.BgRedColor, tablewriter.FgWhiteColor},
-					tablewriter.Colors{tablewriter.BgRedColor, tablewriter.FgWhiteColor},
-					tablewriter.Colors{tablewriter.BgRedColor, tablewriter.FgWhiteColor},
-					tablewriter.Colors{},
-					tablewriter.Colors{},
-					tablewriter.Colors{},
-					tablewriter.Colors{},
-				})
+				table.Rich(
+					[]string{p.Name, req.StructName, req.StructFieldName, req.ReflectType, req.InjectName},
+					[]tablewriter.Colors{
+						tablewriter.Colors{},
+						tablewriter.Colors{},
+						tablewriter.Colors{tablewriter.BgRedColor, tablewriter.FgWhiteColor},
+						tablewriter.Colors{tablewriter.BgRedColor, tablewriter.FgWhiteColor},
+						tablewriter.Colors{tablewriter.BgRedColor, tablewriter.FgWhiteColor},
+					})
 			} else {
-				table.Rich(arr, []tablewriter.Colors{
+				table.Rich(
+					[]string{p.Name, req.StructName, req.StructFieldName, req.ReflectType, req.InjectName},
+					[]tablewriter.Colors{
+						tablewriter.Colors{},
+						tablewriter.Colors{},
+						tablewriter.Colors{},
+						tablewriter.Colors{},
+						tablewriter.Colors{tablewriter.Normal, tablewriter.FgCyanColor},
+					})
+			}
+		}
+
+		for _, resp := range responses {
+			table.Rich(
+				[]string{p.Name, resp.StructName, resp.StructFieldName, resp.ReflectType, resp.InjectName},
+				[]tablewriter.Colors{
 					tablewriter.Colors{},
-					tablewriter.Colors{},
-					tablewriter.Colors{},
-					tablewriter.Colors{},
-					tablewriter.Colors{tablewriter.Normal, tablewriter.FgCyanColor},
 					tablewriter.Colors{},
 					tablewriter.Colors{},
 					tablewriter.Colors{},
 					tablewriter.Colors{tablewriter.Normal, tablewriter.FgGreenColor},
 				})
-			}
-			i++
 		}
 	}
 	table.Render()

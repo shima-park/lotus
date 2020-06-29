@@ -16,9 +16,9 @@ var (
 	consumerFactory       component.Factory   = NewConsumerFactory()
 	_                     component.Component = &Consumer{}
 	defaultConsumerConfig                     = ConsumerConfig{
-		Name:              "my_kafka_consumer",
+		Name:              "kafka_consumer",
 		Addrs:             []string{"localhost:9092"},
-		ConsumerGroup:     "my_consumer_group",
+		ConsumerGroup:     "consumer_group",
 		Topics:            []string{"my_topics"},
 		OffsetsInitial:    sarama.OffsetNewest,
 		OffsetsAutoCommit: true,
