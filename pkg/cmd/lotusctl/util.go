@@ -14,16 +14,17 @@ import (
 )
 
 func newClient(hosts ...string) *client.Client {
-	var host string
-	if len(host) > 0 {
-		host = hosts[0]
-	} else if envHosts := os.Getenv("LOTUS_SERVER_ENV"); envHosts != "" {
-		host = envHosts
-	} else {
-		host = "localhost:8080"
+	for _, host := range append(
+		hosts,
+		os.Getenv("LOTUS_SERVER_ENV"),
+		"localhost:8080",
+	) {
+		if host != "" {
+			return client.NewClient(host)
+		}
 	}
 
-	return client.NewClient(host)
+	return nil
 }
 
 func renderTable(header []string, rows [][]string) {
