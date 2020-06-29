@@ -126,7 +126,7 @@ func (m *metadata) RemovePath(ft proto.FileType, path string) error {
 
 	_, err := os.Stat(path)
 	if !os.IsNotExist(err) {
-		os.Remove(path)
+		_ = os.Remove(path)
 	}
 
 	return m.save()
