@@ -89,8 +89,8 @@ func DotGrgphVisualizer(w io.Writer, p Pipeliner) error {
 	))
 
 	first := true
-	p.Monitor().Do(func(namespace string, kv expvar.KeyValue) {
-		if namespace != p.Name() {
+	p.Monitor().Do(func(root, namespace string, kv expvar.KeyValue) {
+		if root != p.Name() {
 			return
 		}
 		if first {
@@ -106,7 +106,7 @@ func DotGrgphVisualizer(w io.Writer, p Pipeliner) error {
 	for _, proc := range p.ListProcessors() {
 		first := true
 		hasContent := false
-		p.Monitor().Do(func(namespace string, kv expvar.KeyValue) {
+		p.Monitor().Do(func(root, namespace string, kv expvar.KeyValue) {
 			if namespace != proc.Name {
 				return
 			}

@@ -239,7 +239,7 @@ func (s *pipelineService) Visualize(name string, format proto.VisualizeFormat) (
 func convertPipeliner2PipelineView(p pipeline.Pipeliner) *proto.PipelineView {
 	var streamError string
 	var streamErrorCount int
-	p.Monitor().Do(func(namespace string, kv expvar.KeyValue) {
+	p.Monitor().Do(func(root, namespace string, kv expvar.KeyValue) {
 		switch kv.Key {
 		case pipeline.METRICS_KEY_STREAM_ERROR:
 			streamError = kv.Value.String()

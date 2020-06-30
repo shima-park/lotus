@@ -6,22 +6,6 @@ import (
 	"time"
 )
 
-var globalLock sync.Mutex
-var globalMap = map[string]*expvar.Map{}
-
-func loadOrStore(namespace string) *expvar.Map {
-	globalLock.Lock()
-	defer globalLock.Unlock()
-
-	m, ok := globalMap[namespace]
-	if !ok {
-		m = expvar.NewMap(namespace)
-		globalMap[namespace] = m
-	}
-	m.Init() // clean old data
-	return m
-}
-
 type Var = expvar.Var
 
 type KeyValue = expvar.KeyValue
@@ -51,88 +35,91 @@ type Monitor interface {
 	Add(key string, delta int64)
 	AddFloat(key string, delta float64)
 	Delete(key string)
-	Do(f func(namespace string, kv KeyValue))
+	Do(f func(root, namespace string, kv KeyValue))
 	Get(key string) Var
 	Set(key string, av Var)
 	String() string
 }
 
 type monitor struct {
+	root      string
 	namespace string
+	vars      *expvar.Map
 	lock      *sync.RWMutex
-	m         map[string]*expvar.Map
+	childs    map[string]*monitor
 }
 
 func NewMonitor(namespace string) Monitor {
+	return newMonitor(namespace, namespace)
+}
+
+func newMonitor(root, namespace string) *monitor {
 	return &monitor{
+		root:      namespace,
 		namespace: namespace,
 		lock:      &sync.RWMutex{},
-		m: map[string]*expvar.Map{
-			namespace: loadOrStore(namespace),
-		},
+		vars:      new(expvar.Map).Init(),
+		childs:    map[string]*monitor{},
 	}
 }
 
 func (m *monitor) With(namespace string) Monitor {
+	var nm *monitor
 	m.lock.Lock()
-	if _, ok := m.m[namespace]; !ok {
-		m.m[namespace] = loadOrStore(namespace)
+	var ok bool
+	if nm, ok = m.childs[namespace]; !ok {
+		nm = newMonitor(m.root, namespace)
+		m.childs[namespace] = nm
 	}
 	m.lock.Unlock()
 
-	return &monitor{
-		namespace: namespace,
-		lock:      m.lock,
-		m:         m.m,
-	}
+	return nm
 }
 
 func (m *monitor) Add(key string, delta int64) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	m.m[m.namespace].Add(key, delta)
+	m.vars.Add(key, delta)
 }
 
 func (m *monitor) AddFloat(key string, delta float64) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	m.m[m.namespace].AddFloat(key, delta)
+	m.vars.AddFloat(key, delta)
 }
 
 func (m *monitor) Delete(key string) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	m.m[m.namespace].Delete(key)
+	m.vars.Delete(key)
 }
 
-func (m *monitor) Do(f func(namespace string, kv KeyValue)) {
+func (m *monitor) Do(f func(root, namespace string, kv KeyValue)) {
+	m.vars.Do(func(kv KeyValue) {
+		f(m.root, m.namespace, kv)
+	})
+
 	m.lock.RLock()
-	defer m.lock.RUnlock()
-	for namespace, m := range m.m {
-		m.Do(func(kv KeyValue) {
-			f(namespace, kv)
-		})
+	for _, c := range m.childs {
+		c.Do(f)
 	}
+	m.lock.RUnlock()
 }
 
 func (m *monitor) Get(key string) Var {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-	if v := m.m[m.namespace].Get(key); v != nil {
+	if v := m.vars.Get(key); v != nil {
 		return v
 	}
+
+	m.lock.RLock()
+	for _, c := range m.childs {
+		if v := c.Get(key); v != nil {
+			return v
+		}
+	}
+	m.lock.RUnlock()
+
 	return String("")
 }
 
 func (m *monitor) Set(key string, av Var) {
-	m.lock.Lock()
-	moni := m.m[m.namespace]
-	moni.Set(key, av)
-	m.lock.Unlock()
+	m.vars.Set(key, av)
 }
 
 func (m *monitor) String() string {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-	return m.m[m.namespace].String()
+	return m.vars.String()
 }
