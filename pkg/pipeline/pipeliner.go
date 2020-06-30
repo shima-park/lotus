@@ -262,10 +262,10 @@ func (p *pipeliner) start() error {
 				timer.Reset(next.Sub(now))
 				p.monitor.Set(METRICS_KEY_PIPELINE_NEXT_RUN_TIME, monitor.Time(next))
 				p.monitor.Set(METRICS_KEY_PIPELINE_LAST_START_TIME, monitor.Time(now))
-				p.monitor.Add(METRICS_KEY_PIPELINE_RUN_TIMES, 1)
 
 				c.Run()
 
+				p.monitor.Add(METRICS_KEY_PIPELINE_RUN_TIMES, 1)
 				p.monitor.Set(METRICS_KEY_PIPELINE_LAST_END_TIME, monitor.Time(time.Now()))
 			}
 		}

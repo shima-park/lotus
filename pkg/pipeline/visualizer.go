@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os/exec"
 )
 
@@ -123,7 +124,7 @@ func DotGrgphVisualizer(w io.Writer, p Pipeliner) error {
 				buffer.WriteString("<tr><td align=\"left\"><b>" + proc.Name + "</b></td></tr>\n")
 			}
 
-			buffer.WriteString("<tr><td align=\"left\">" + kv.Key + ":" + kv.Value.String() + "</td></tr>\n")
+			buffer.WriteString("<tr><td align=\"left\">" + kv.Key + ":" + url.QueryEscape(kv.Value.String()) + "</td></tr>\n")
 		})
 
 		if hasContent {
