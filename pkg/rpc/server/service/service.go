@@ -57,6 +57,7 @@ func (s *Service) Start() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -90,6 +91,10 @@ func loadPipelineFromFile(path string, pm PipelinerManager) error {
 	_, err = pm.AddPipeline(conf)
 	if err != nil {
 		return err
+	}
+
+	if conf.Bootstrap {
+		_ = pm.Start(conf.Name)
 	}
 
 	return nil
