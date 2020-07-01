@@ -90,7 +90,7 @@ func checkIn(inj inject.Injector, t reflect.Type) []error {
 		for i := 0; i < val.NumField(); i++ {
 			f := val.Field(i)
 			structField := typ.Field(i)
-			injectName := structField.Tag.Get("inject")
+			ia := inject.GetInjectAnnotation(structField)
 
 			var tt reflect.Type
 			if f.Type().Kind() == reflect.Interface {
@@ -100,11 +100,12 @@ func checkIn(inj inject.Injector, t reflect.Type) []error {
 				tt = f.Type()
 			}
 
-			if val := inj.Get(tt, injectName); !val.IsValid() {
+			val := inj.Get(tt, ia.Name)
+			if !val.IsValid() && !ia.Options.Contains(inject.InjectTagOptionsOptional) {
 				errs = append(errs, MissingDependencyError{
 					Field:       structField.Name,
 					ReflectType: tt.String(),
-					InjectName:  injectName,
+					InjectName:  ia.Name,
 				})
 			}
 		}

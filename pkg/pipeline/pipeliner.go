@@ -108,12 +108,12 @@ func (p *pipeliner) init(conf Config) *pipeliner {
 	var err error
 	p.components, err = conf.NewComponents()
 	if err != nil {
-		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
+		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s NewComponents", conf.Name))
 	}
 
 	p.processors, err = conf.NewProcessors()
 	if err != nil {
-		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
+		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s NewProcessors", conf.Name))
 	}
 
 	var pm = map[string]Processor{}
@@ -123,17 +123,14 @@ func (p *pipeliner) init(conf Config) *pipeliner {
 
 	p.stream, err = NewStream(conf.Stream, pm)
 	if err != nil {
-		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
-	}
-
-	if p.stream == nil {
-		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
+		p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s NewStream", conf.Name))
 	}
 
 	if p.config.Schedule != "" && p.parser != nil {
 		p.schedule, err = p.parser(p.config.Schedule)
 		if err != nil {
-			p.errs = append(p.errs, errors.Wrapf(err, "Pipeline: %s", conf.Name))
+			p.errs = append(p.errs,
+				errors.Wrapf(err, "Pipeline: %s parse schedule %s", conf.Name, p.config.Schedule))
 		}
 	}
 
