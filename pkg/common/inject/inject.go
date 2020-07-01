@@ -146,11 +146,14 @@ func (inj *injector) Apply(val interface{}) error {
 		if f.CanSet() && ia.Exists {
 			ft := f.Type()
 			v := inj.Get(ft, ia.Name)
-			if !v.IsValid() && !ia.Options.Contains(InjectTagOptionsOptional) {
-				return fmt.Errorf("Value not found for type: %v name: %v", ft, ia.Name)
-			}
 
-			f.Set(v)
+			if v.IsValid() {
+				f.Set(v)
+			} else {
+				if !ia.Options.Contains(InjectTagOptionsOptional) {
+					return fmt.Errorf("Value not found for type: %v name: %v", ft, ia.Name)
+				}
+			}
 		}
 
 	}
