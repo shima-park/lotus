@@ -4,6 +4,7 @@ package inject
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -141,16 +142,12 @@ func (inj *injector) Apply(val interface{}) error {
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
 		structField := t.Field(i)
-		if f.CanSet() && (structField.Tag == "inject" || structField.Tag.Get("inject") != "") {
-			name := structField.Tag.Get("inject")
-			if name == "" {
-				name = structField.Name
-			}
-
+		ia := GetInjectAnnotation(structField)
+		if f.CanSet() && ia.Exists {
 			ft := f.Type()
-			v := inj.Get(ft, name)
-			if !v.IsValid() {
-				return fmt.Errorf("Value not found for type: %v name: %v", ft, name)
+			v := inj.Get(ft, ia.Name)
+			if !v.IsValid() && !ia.Options.Contains(InjectTagOptionsOptional) {
+				return fmt.Errorf("Value not found for type: %v name: %v", ft, ia.Name)
 			}
 
 			f.Set(v)
@@ -257,19 +254,76 @@ func (i *injector) MapValues(vals ...reflect.Value) error {
 		for k := 0; k < val.NumField(); k++ {
 			f := val.Field(k)
 			structField := typ.Field(k)
-			if f.IsValid() && (structField.Tag == "inject" || structField.Tag.Get("inject") != "") {
-				name := structField.Tag.Get("inject")
-				if name == "" {
-					name = structField.Name
-				}
+			ia := GetInjectAnnotation(structField)
+			if f.IsValid() && ia.Exists {
 				if f.Type().Kind() == reflect.Interface {
 					nilPtr := reflect.New(f.Type())
-					i.MapTo(f.Interface(), name, nilPtr.Interface())
+					i.MapTo(f.Interface(), ia.Name, nilPtr.Interface())
 				} else {
-					i.Set(f.Type(), name, f)
+					i.Set(f.Type(), ia.Name, f)
 				}
 			}
 		}
 	}
 	return nil
+}
+
+const (
+	InjectTagKey             = "inject"
+	InjectTagOptionsOptional = "optional"
+)
+
+type InjectAnnotation struct {
+	Name    string
+	Options TagOptions
+	Exists  bool
+}
+
+func GetInjectAnnotation(structField reflect.StructField) InjectAnnotation {
+	tag := structField.Tag
+	tagVal := tag.Get(InjectTagKey)
+	if tag == InjectTagKey || tagVal != "" {
+		var name string
+		var options TagOptions
+		if tagVal == "" {
+			name = structField.Name
+		} else {
+			name, options = ParseTag(tagVal)
+		}
+
+		return InjectAnnotation{
+			Name:    name,
+			Options: options,
+			Exists:  true,
+		}
+	}
+	return InjectAnnotation{}
+}
+
+type TagOptions string
+
+func ParseTag(tag string) (string, TagOptions) {
+	if idx := strings.Index(tag, ","); idx != -1 {
+		return tag[:idx], TagOptions(tag[idx+1:])
+	}
+	return tag, TagOptions("")
+}
+
+func (o TagOptions) Contains(optionName string) bool {
+	if len(o) == 0 {
+		return false
+	}
+	s := string(o)
+	for s != "" {
+		var next string
+		i := strings.Index(s, ",")
+		if i >= 0 {
+			s, next = s[:i], s[i+1:]
+		}
+		if s == optionName {
+			return true
+		}
+		s = next
+	}
+	return false
 }
