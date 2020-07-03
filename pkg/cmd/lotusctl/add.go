@@ -14,7 +14,7 @@ import (
 func NewAddCmd(cmds ...*cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add (RESOURCE/NAME | -f FILENAME)",
-		Short: "add a resource to the server",
+		Short: "Add a resource to the server",
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
 		},

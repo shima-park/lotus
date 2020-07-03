@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 func Execute(version, branch, commit, built string) {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
-		Short: "show version information",
+		Short: "Show version information",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Printf("Version: %s\n", version)
 			fmt.Printf("Branch: %s\n", branch)
