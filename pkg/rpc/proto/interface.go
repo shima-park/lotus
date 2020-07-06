@@ -1,18 +1,13 @@
 package proto
 
-import (
-	pipe "github.com/shima-park/lotus/pkg/pipeline"
-)
-
-type Pipeline interface {
-	GenerateConfig(name string, opts ...ConfigOption) (*pipe.Config, error)
-	Add(conf pipe.Config) error
-	Remove(names ...string) error
-	Recreate(conf pipe.Config) error
-	List() ([]PipelineView, error)
-	Find(name string) (*PipelineView, error)
-	Control(cmd ControlCommand, names []string) error
-	Visualize(name string, format VisualizeFormat) ([]byte, error)
+type Executor interface {
+	Add(_type string, config []byte) error
+	Remove(executorInstanceIDs ...string) error
+	Recreate(_type string, config []byte) error
+	List() ([]ExecutorView, error)
+	Find(executorInstanceID string) (*ExecutorView, error)
+	Control(cmd ControlCommand, executorInstanceIDs ...string) error
+	Visualize(format VisualizeFormat, executorInstanceID string) ([]byte, error)
 }
 
 type Component interface {
@@ -26,8 +21,8 @@ type Processor interface {
 }
 
 type Plugin interface {
-	Open(path string) error
-	Add(path string) error
+	Add(name string, bin []byte) error
+	AddPath(path string) error
 	Remove(names ...string) error
 	List() ([]PluginView, error)
 }
@@ -40,14 +35,20 @@ type FileType string
 
 const (
 	FileTypePlugin         FileType = "plugins"
-	FileTypePipelineConfig FileType = "pipelines"
+	FileTypeExecutorConfig FileType = "executors"
 )
 
+type Snapshot struct {
+	PluginPaths         []string
+	ExecutorConfigPaths map[string][]string // key: executor type
+}
+
 type Metadata interface {
-	AddPath(ft FileType, path string) error
-	RemovePath(ft FileType, path string) error
-	GetPath(ft FileType, filename string) string
-	ExistsPath(ft FileType, path string) bool
-	ListPaths(ft FileType) []string
-	Overwrite(ft FileType, path string, data []byte) error
+	PutPlugin(name string, bin []byte) (path string, err error)
+	PutExecutorRawConfig(_type, name string, raw []byte) (path string, err error)
+	AddPluginPath(path string) error
+	AddExecutorConfigPath(_type, path string) error
+	RemovePluginPath(path string) error
+	RemoveExecutorConfigPath(_type, path string) error
+	Snapshot(do func(Snapshot))
 }

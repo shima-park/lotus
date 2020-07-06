@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/shima-park/lotus/pkg/rpc/client"
+	"github.com/shima-park/lotus/pkg/rpc/http/client"
 )
 
 func newClient(hosts ...string) *client.Client {

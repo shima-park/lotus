@@ -21,14 +21,14 @@ func NewRMCmd(cmds ...*cobra.Command) *cobra.Command {
 
 func NewRMPipeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "pipeline (NAME)",
+		Use:     "executor (NAME)",
 		Aliases: []string{"pipe"},
-		Short:   "Remove a pipeline's config on the server",
+		Short:   "Remove a executor's config on the server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				handleErr(errors.New("You must provide a pipeline name"))
+				handleErr(errors.New("You must provide a executor name"))
 			}
-			err := newClient().Pipeline.Remove(args...)
+			err := newClient().Executor.Remove(args...)
 			handleErr(err)
 		},
 	}

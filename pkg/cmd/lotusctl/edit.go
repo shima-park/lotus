@@ -9,10 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/shima-park/lotus/pkg/pipeline"
 	"github.com/shima-park/lotus/pkg/util/editor"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 func NewEditCmd(cmds ...*cobra.Command) *cobra.Command {
@@ -30,25 +28,30 @@ func NewEditCmd(cmds ...*cobra.Command) *cobra.Command {
 
 func NewEditPipeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "pipeline (NAME)",
-		Aliases: []string{"pipe"},
-		Short:   "Edit a pipeline's config on the server",
+		Use:     "executor (NAME)",
+		Aliases: []string{"exec"},
+		Short:   "Edit a executor's config on the server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				handleErr(errors.New("You must provide a pipeline name"))
+				handleErr(errors.New("You must provide a executor name"))
 			}
 			c := newClient()
-			pipe, err := c.Pipeline.Find(args[0])
+			exec, err := c.Executor.Find(args[0])
 			handleErr(err)
 
-			err = runEditor(pipe.RawConfig, c.Pipeline.Recreate, false)
+			err = runEditor(
+				exec.RawConfig,
+				func(config []byte) error {
+					return c.Executor.Recreate(exec.Name, config)
+				},
+				false)
 			handleErr(err)
 		},
 	}
 	return cmd
 }
 
-func runEditor(origin []byte, callback func(pipeline.Config) error, isAdd bool) error {
+func runEditor(origin []byte, callback func(config []byte) error, isAdd bool) error {
 	edit := editor.NewDefaultEditor([]string{"EDITOR"})
 	buff := bytes.NewBuffer(origin)
 	edited, path, err := edit.LaunchTempFile("edit-", "", buff)
@@ -69,13 +72,7 @@ func runEditor(origin []byte, callback func(pipeline.Config) error, isAdd bool) 
 		return nil
 	}
 
-	var config pipeline.Config
-	err = yaml.Unmarshal(edited, &config)
-	if err != nil {
-		return err
-	}
-
-	return callback(config)
+	return callback(edited)
 }
 
 func hasLines(r io.Reader) (bool, error) {

@@ -23,7 +23,7 @@ type Result struct {
 	Data interface{} `json:"data"`
 }
 
-type PipelineView struct {
+type ExecutorView struct {
 	Name             string          `json:"name"`
 	State            string          `json:"state"`
 	Schedule         string          `json:"schedule"`
@@ -60,21 +60,20 @@ type ProcessorView struct {
 }
 
 type PluginView struct {
-	Name      string `json:"name"`
-	Path      string `json:"path"`
-	Module    string `json:"module"`
-	OpenTime  string `json:"open_time"`
-	IsRemoved bool   `json:"is_removed"`
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	Module   string `json:"module"`
+	OpenTime string `json:"open_time"`
 }
 
 type MetadataView struct {
-	PluginPaths         []string `json:"plugin_paths" yaml:"plugin_paths"`
-	PipelineConfigPaths []string `json:"pipeline_config_paths" yaml:"pipeline_config_paths"`
-	HTTPAddr            string   `json:"http_addr" yaml:"http_addr"`
-	Version             string   `json:"version" yaml:"version"`
-	Branch              string   `json:"branch" yaml:"branch"`
-	Commit              string   `json:"commit" yaml:"commit"`
-	Built               string   `json:"built" yaml:"built"`
+	PluginPaths         []string            `json:"plugin_paths" yaml:"plugin_paths"`
+	ExecutorConfigPaths map[string][]string `json:"executor_config_paths" yaml:"executor_config_paths"`
+	HTTPAddr            string              `json:"http_addr" yaml:"http_addr"`
+	Version             string              `json:"version" yaml:"version"`
+	Branch              string              `json:"branch" yaml:"branch"`
+	Commit              string              `json:"commit" yaml:"commit"`
+	Built               string              `json:"built" yaml:"built"`
 }
 
 type PluginOpenRequest struct {
@@ -82,11 +81,6 @@ type PluginOpenRequest struct {
 }
 
 type GenerateConfigRequest struct {
-	Name                  string   `json:"name"`
-	Schedule              string   `json:"schedule"`
-	CircuitBreakerSamples int64    `json:"circuit_breaker_samples"`
-	CircuitBreakerRate    float64  `json:"circuit_breaker_rate"`
-	Bootstrap             bool     `json:"bootstrap"`
-	Components            []string `json:"components"`
-	Processors            []string `json:"processors"`
+	Type   string `json:"type"`
+	Config []byte `json:"config"`
 }

@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/shima-park/lotus/pkg/pipeline"
-	"github.com/shima-park/lotus/pkg/rpc/proto"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 func NewAddCmd(cmds ...*cobra.Command) *cobra.Command {
@@ -24,7 +21,7 @@ func NewAddCmd(cmds ...*cobra.Command) *cobra.Command {
 	return cmd
 }
 
-func NewAddPipelineCmd() *cobra.Command {
+func NewAddExecutorCmd() *cobra.Command {
 	var file string
 	var name string
 	var schedule string
@@ -32,51 +29,56 @@ func NewAddPipelineCmd() *cobra.Command {
 	var processors []string
 	var components []string
 	cmd := &cobra.Command{
-		Use:     "pipeline (PATH | URL | -n PIPELINE_NAME -p PROCESSOR_NAME -c COMPONENT_NAME)",
-		Aliases: []string{"pipe"},
-		Short:   "Add a pipeline to the server",
+		Use:     "executor (PATH | URL | -n EXECUTOR_NAME -p PROCESSOR_NAME -c COMPONENT_NAME)",
+		Aliases: []string{"exec"},
+		Short:   "Add a executor to the server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if file != "" {
+				if len(args) == 0 {
+					handleErr(errors.New("You need to provide a executor name."))
+				}
+
 				file, err := tryDownloadAndCheckPath(file)
 				handleErr(err)
 
 				data, err := ioutil.ReadFile(file)
 				handleErr(err)
 
-				var conf pipeline.Config
-				err = yaml.Unmarshal(data, &conf)
-				handleErr(err)
-
-				err = newClient().Pipeline.Add(conf)
+				err = newClient().Executor.Add(args[0], data)
 				handleErr(err)
 			} else if name != "" || len(processors) > 0 || len(components) > 0 {
-				c := newClient()
-				conf, err := c.Pipeline.GenerateConfig(
-					name,
-					proto.WithSchedule(schedule),
-					proto.WithBootstrap(bootstrap),
-					proto.WithComponents(components),
-					proto.WithProcessor(processors),
-				)
-				handleErr(err)
-
-				origin, err := yaml.Marshal(conf)
-				handleErr(err)
-
-				err = runEditor(origin, c.Pipeline.Add, true)
-				handleErr(err)
+				//c := newClient()
+				//conf, err := c.Executor.GenerateConfig(
+				//	name,
+				//	proto.WithSchedule(schedule),
+				//	proto.WithBootstrap(bootstrap),
+				//	proto.WithComponents(components),
+				//	proto.WithProcessor(processors),
+				//)
+				//handleErr(err)
+				//
+				//origin, err := yaml.Marshal(conf)
+				//handleErr(err)
+				//
+				//err = runEditor(
+				//	origin,
+				//	func(config string) error {
+				//		return c.Executor.Add(name, config)
+				//	},
+				//	true)
+				//handleErr(err)
 			} else {
-				fmt.Println("-f pipeline.yaml or -n test -p read_line -c es_client you at least provide one of them")
+				fmt.Println("-f executor.yaml or -n test -p read_line -c es_client you at least provide one of them")
 			}
 
 		},
 	}
-	cmd.Flags().StringVarP(&file, "file", "f", "", "path to pipeline config")
-	cmd.Flags().StringVarP(&name, "name", "n", "", "name of pipeline")
-	cmd.Flags().StringVarP(&schedule, "schedule", "s", "", "name of pipeline")
+	cmd.Flags().StringVarP(&file, "file", "f", "", "path to executor config")
+	cmd.Flags().StringVarP(&name, "name", "n", "", "name of executor")
+	cmd.Flags().StringVarP(&schedule, "schedule", "s", "", "name of executor")
 	cmd.Flags().BoolVarP(&bootstrap, "bootstrap", "b", false, "whether to start with the server")
-	cmd.Flags().StringSliceVarP(&processors, "processors", "p", nil, "processors of pipeline")
-	cmd.Flags().StringSliceVarP(&components, "components", "c", nil, "components of pipeline")
+	cmd.Flags().StringSliceVarP(&processors, "processors", "p", nil, "processors of executor")
+	cmd.Flags().StringSliceVarP(&components, "components", "c", nil, "components of executor")
 
 	return cmd
 }
@@ -101,7 +103,7 @@ func NewAddPluginCmd() *cobra.Command {
 
 			c := newClient()
 			for _, path := range paths {
-				err := c.Plugin.Add(path)
+				err := c.Plugin.AddPath(path)
 				handleErr(err)
 			}
 		},
@@ -112,7 +114,7 @@ func NewAddPluginCmd() *cobra.Command {
 func init() {
 	rootCmd.AddCommand(
 		NewAddCmd(
-			NewAddPipelineCmd(), NewAddPluginCmd(),
+			NewAddExecutorCmd(), NewAddPluginCmd(),
 		),
 	)
 }

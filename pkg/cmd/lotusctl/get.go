@@ -14,7 +14,7 @@ import (
 
 func NewGetCmd(cmds ...*cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get (RESOURCE/NAME | -p PIPELINE_NAME)",
+		Use:   "get (RESOURCE/NAME | -p EXECUTOR_NAME)",
 		Short: "Display one or many resources",
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
@@ -28,15 +28,15 @@ func NewGetCmd(cmds ...*cobra.Command) *cobra.Command {
 func NewGetPipeCmd() *cobra.Command {
 	var o string
 	cmd := &cobra.Command{
-		Use:     "pipeline",
-		Aliases: []string{"pipe"},
-		Short:   "Display pipeline list",
+		Use:     "executor",
+		Aliases: []string{"exec"},
+		Short:   "Display executor list",
 		Run: func(cmd *cobra.Command, args []string) {
 			c := newClient()
-			list, err := c.Pipeline.List()
+			list, err := c.Executor.List()
 			handleErr(err)
 
-			var filters []proto.PipelineView
+			var filters []proto.ExecutorView
 			for _, e := range list {
 				if len(args) > 0 && !stringInSlice(e.Name, args) {
 					continue
@@ -47,7 +47,7 @@ func NewGetPipeCmd() *cobra.Command {
 			switch o {
 			case "term":
 				for _, e := range filters {
-					data, err := c.Pipeline.Visualize(e.Name, proto.VisualizeFormatTerm)
+					data, err := c.Executor.Visualize(proto.VisualizeFormatTerm, e.Name)
 					handleErr(err)
 					fmt.Println(string(data))
 
@@ -55,7 +55,7 @@ func NewGetPipeCmd() *cobra.Command {
 				}
 			case "web":
 				for _, e := range filters {
-					data, err := c.Pipeline.Visualize(e.Name, proto.VisualizeFormatSVG)
+					data, err := c.Executor.Visualize(proto.VisualizeFormatSVG, e.Name)
 					handleErr(err)
 
 					f, err := ioutil.TempFile(os.TempDir(), "*.svg")
@@ -98,10 +98,10 @@ func NewGetPipeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o, "output", "o", "", `Output format. The default output is show pipeline list.
--o=yaml output the pipeline config by yaml format.
--o=term output the pipeline dependency table.
--o=web output the pipeline monitor information to svg file and open it with system default browser`)
+	cmd.Flags().StringVarP(&o, "output", "o", "", `Output format. The default output is show executor list.
+-o=yaml output the executor config by yaml format.
+-o=term output the executor dependency table.
+-o=web output the executor monitor information to svg file and open it with system default browser`)
 
 	return cmd
 }
@@ -145,7 +145,7 @@ func NewGetCompCmd() *cobra.Command {
 				list, err = newClient().Component.List()
 				handleErr(err)
 			} else {
-				pipe, err := newClient().Pipeline.Find(p)
+				pipe, err := newClient().Executor.Find(p)
 				handleErr(err)
 				list = pipe.Components
 			}
@@ -189,7 +189,7 @@ func NewGetCompCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&p, "pipeline", "p", "", "The pipeline scope for this CLI request")
+	cmd.Flags().StringVarP(&p, "executor", "p", "", "The executor scope for this CLI request")
 	cmd.Flags().StringVarP(&o, "output", "o", "", "Output by yaml format.")
 
 	return cmd
@@ -209,7 +209,7 @@ func NewGetProcCmd() *cobra.Command {
 				list, err = newClient().Processor.List()
 				handleErr(err)
 			} else {
-				pipe, err := newClient().Pipeline.Find(p)
+				pipe, err := newClient().Executor.Find(p)
 				handleErr(err)
 				list = pipe.Processors
 			}
@@ -253,7 +253,7 @@ func NewGetProcCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&p, "pipeline", "p", "", "The pipeline scope for this CLI request")
+	cmd.Flags().StringVarP(&p, "executor", "p", "", "The executor scope for this CLI request")
 	cmd.Flags().StringVarP(&o, "output", "o", "", "Output by yaml format.")
 
 	return cmd
@@ -274,11 +274,11 @@ func NewGetPluginCmd() *cobra.Command {
 					continue
 				}
 				rows = append(rows, []string{
-					e.Name, e.Path, e.Module, e.OpenTime, fmt.Sprint(e.IsRemoved),
+					e.Name, e.Path, e.Module, e.OpenTime,
 				})
 			}
 
-			header := []string{"name", "path", "module", "open_time", "is_removed"}
+			header := []string{"name", "path", "module", "open_time"}
 
 			renderTable(header, rows)
 		},
@@ -303,7 +303,7 @@ func NewGetServerCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&p, "p", "", "The pipeline scope for this CLI request")
+	cmd.Flags().StringVar(&p, "p", "", "The executor scope for this CLI request")
 
 	return cmd
 }
