@@ -94,12 +94,20 @@ func (m *metadata) PutPlugin(name string, bin []byte) (path string, err error) {
 
 	filename := m.GetPath(proto.FileTypePlugin, name)
 
-	err = ioutil.WriteFile(filename, bin, 0644)
+	err = os.MkdirAll(filepath.Dir(filename), 0777)
 	if err != nil {
 		return "", err
 	}
 
-	m.registry.PluginPaths = append(m.registry.PluginPaths, filename)
+	err = ioutil.WriteFile(filename, bin, 0666)
+	if err != nil {
+		return "", err
+	}
+
+	err = m.addPluginPath(filename)
+	if err != nil {
+		return "", err
+	}
 
 	return filename, m.save()
 }
@@ -110,12 +118,20 @@ func (m *metadata) PutExecutorRawConfig(_type, name string, raw []byte) (path st
 
 	filename := m.GetPath(proto.FileTypeExecutorConfig, name)
 
-	err = ioutil.WriteFile(filename, raw, 0644)
+	err = os.MkdirAll(filepath.Dir(name), 0777)
+	if err != nil {
+		return "", err
+	}
+
+	err = ioutil.WriteFile(filename, raw, 0666)
 	if err != nil {
 		return "", err
 	}
 
 	err = m.addExecutorConfigPath(_type, filename)
+	if err != nil {
+		return "", err
+	}
 
 	return filename, m.save()
 }
@@ -138,6 +154,10 @@ func (m *metadata) AddPluginPath(path string) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
+	return m.addPluginPath(path)
+}
+
+func (m *metadata) addPluginPath(path string) error {
 	return m.addPath(path, "*.so", &m.registry.PluginPaths)
 }
 
