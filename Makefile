@@ -11,7 +11,7 @@ build-ctl:
 
 .PHONY: build-srv
 build-srv:
-	go build -o lotussrv -trimpath cmd/lotussrv/main.go
+	go build -trimpath -o lotussrv cmd/lotussrv/main.go
 
 .PHONY: install-ctl
 install-ctl:

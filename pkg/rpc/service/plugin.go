@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/shima-park/lotus/pkg/common/log"
 	"github.com/shima-park/lotus/pkg/common/plugin"
 	"github.com/shima-park/lotus/pkg/rpc/proto"
 )
@@ -59,10 +60,10 @@ func (s *pluginService) Add(pluginName string, bin []byte) error {
 
 	err = TestPlugin(path)
 	if err != nil {
-		//rerr := s.metadata.RemovePluginPath(path)
-		//if rerr != nil {
-		//	log.Error("Failed to plugin path: %s error: %s", path, rerr)
-		//}
+		rerr := s.metadata.RemovePluginPath(path)
+		if rerr != nil {
+			log.Error("Failed to plugin path: %s error: %s", path, rerr)
+		}
 		return err
 	}
 	return nil

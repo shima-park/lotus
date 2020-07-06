@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/shima-park/lotus/pkg/common/log"
-	"github.com/shima-park/lotus/pkg/common/plugin"
 	"github.com/shima-park/lotus/pkg/rpc/proto"
 )
 
@@ -38,7 +37,7 @@ func (s *Service) Start() error {
 				log.Warn("Plugin path(%s) is not exists", path)
 				continue
 			}
-			err := plugin.LoadPlugins(path)
+			err := TestPlugin(path)
 			if err != nil {
 				errs = append(errs, err)
 			}
@@ -65,7 +64,7 @@ func (s *Service) Start() error {
 		}
 	})
 
-	return nil
+	return errs.Error()
 }
 
 func isNotExists(path string) bool {
