@@ -23,4 +23,4 @@ install-srv:
 
 .PHONY: run
 run:
-	./lotussrv server run --http :8080 --meta ./meta
+	lotussrv server run --http :8080 --meta ./meta

@@ -36,6 +36,7 @@ func TestPlugin(paths ...string) error {
 	cmd := reexec.Command(append([]string{"test_plugin"}, paths...)...)
 	var errOut bytes.Buffer
 	cmd.Stderr = &errOut
+	cmd.Stdout = os.Stdout
 	err := cmd.Run()
 	if err != nil {
 		return err

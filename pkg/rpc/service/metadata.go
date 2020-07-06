@@ -101,7 +101,7 @@ func (m *metadata) PutPlugin(name string, bin []byte) (path string, err error) {
 
 	m.registry.PluginPaths = append(m.registry.PluginPaths, filename)
 
-	return filename, err
+	return filename, m.save()
 }
 
 func (m *metadata) PutExecutorRawConfig(_type, name string, raw []byte) (path string, err error) {
@@ -117,7 +117,7 @@ func (m *metadata) PutExecutorRawConfig(_type, name string, raw []byte) (path st
 
 	err = m.addExecutorConfigPath(_type, filename)
 
-	return filename, err
+	return filename, m.save()
 }
 
 func (m *metadata) RemoveExecutorConfigPath(_type, path string) error {
