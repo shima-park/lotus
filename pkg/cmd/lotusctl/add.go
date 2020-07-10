@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
+	"github.com/shima-park/lotus/pkg/rpc/proto"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +20,13 @@ func NewAddCmd(cmds ...*cobra.Command) *cobra.Command {
 	}
 
 	cmd.AddCommand(cmds...)
+
 	return cmd
 }
 
 func NewAddExecutorCmd() *cobra.Command {
 	var file string
+	var _type string
 	var name string
 	var schedule string
 	var bootstrap bool
@@ -44,36 +48,40 @@ func NewAddExecutorCmd() *cobra.Command {
 				data, err := ioutil.ReadFile(file)
 				handleErr(err)
 
-				err = newClient().Executor.Add(args[0], data)
+				err = newClient().AddExecutor(&proto.AddExecutorRequest{
+					Config: data,
+				})
 				handleErr(err)
-			} else if name != "" || len(processors) > 0 || len(components) > 0 {
-				//c := newClient()
-				//conf, err := c.Executor.GenerateConfig(
-				//	name,
-				//	proto.WithSchedule(schedule),
-				//	proto.WithBootstrap(bootstrap),
-				//	proto.WithComponents(components),
-				//	proto.WithProcessor(processors),
-				//)
-				//handleErr(err)
-				//
-				//origin, err := yaml.Marshal(conf)
-				//handleErr(err)
-				//
-				//err = runEditor(
-				//	origin,
-				//	func(config string) error {
-				//		return c.Executor.Add(name, config)
-				//	},
-				//	true)
-				//handleErr(err)
+			} else if _type != "" && (len(processors) > 0 || len(components) > 0) {
+				c := newClient()
+				origin, err := c.GenerateExecutorConfig(
+					&proto.GenerateExecutorConfigRequest{
+						Name:       name,
+						Type:       _type,
+						Components: components,
+						Processors: processors,
+					},
+				)
+				handleErr(err)
+
+				err = runEditor(
+					[]byte(origin),
+					func(edited []byte) error {
+						fmt.Println("======", string(edited))
+						err = newClient().PutExecutor(&proto.PutExecutorRequest{
+							Config: edited,
+						})
+						return err
+					})
+				handleErr(err)
 			} else {
-				fmt.Println("-f executor.yaml or -n test -p read_line -c es_client you at least provide one of them")
+				fmt.Println("-f executor.yaml or -n test -t pipeliner -p read_line -c es_client you at least provide one of them")
 			}
 
 		},
 	}
 	cmd.Flags().StringVarP(&file, "file", "f", "", "path to executor config")
+	cmd.Flags().StringVarP(&_type, "type", "t", "", "type of executor")
 	cmd.Flags().StringVarP(&name, "name", "n", "", "name of executor")
 	cmd.Flags().StringVarP(&schedule, "schedule", "s", "", "name of executor")
 	cmd.Flags().BoolVarP(&bootstrap, "bootstrap", "b", false, "whether to start with the server")
@@ -103,7 +111,13 @@ func NewAddPluginCmd() *cobra.Command {
 
 			c := newClient()
 			for _, path := range paths {
-				err := c.Plugin.AddPath(path)
+				data, err := ioutil.ReadFile(path)
+				handleErr(err)
+
+				err = c.AddPlugin(&proto.AddPluginRequest{
+					Name:              filepath.Base(path),
+					ShareObjectBinary: data,
+				})
 				handleErr(err)
 			}
 		},

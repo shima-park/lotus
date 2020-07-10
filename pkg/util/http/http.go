@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/shima-park/lotus/pkg/rpc/proto"
-	"gopkg.in/yaml.v2"
 )
 
 func GetJSON(url string, ret interface{}) error {
@@ -30,25 +29,6 @@ func GetJSON(url string, ret interface{}) error {
 
 func PostJSON(url string, data, ret interface{}) error {
 	param, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(param))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP status code: %d", resp.StatusCode)
-	}
-
-	return HandleBody(resp.Body, ret)
-}
-
-func PostYaml(url string, data, ret interface{}) error {
-	param, err := yaml.Marshal(data)
 	if err != nil {
 		return err
 	}

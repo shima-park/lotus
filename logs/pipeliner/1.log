@@ -1,0 +1,124 @@
+=======plugins: /Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/write.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/json_decode.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/read_line.so
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=========address: [::]:56433
+[GIN-debug] GET    /name                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func1 (3 handlers)
+[GIN-debug] POST   /start                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func2 (3 handlers)
+[GIN-debug] POST   /stop                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func3 (3 handlers)
+[GIN-debug] GET    /state                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func4 (3 handlers)
+[GIN-debug] GET    /components               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func5 (3 handlers)
+[GIN-debug] GET    /processors               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func6 (3 handlers)
+[GIN-debug] GET    /metrics                  --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func7 (3 handlers)
+[GIN-debug] GET    /config                   --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func8 (3 handlers)
+[GIN-debug] GET    /visualize                --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func9 (3 handlers)
+[GIN-debug] GET    /check                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func10 (3 handlers)
+[GIN-debug] GET    /error                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func11 (3 handlers)
+name 1 addr [::]:56433 url localhost:8080/executor/register
+=======plugins: /Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/write.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/json_decode.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/read_line.so
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=========address: [::]:56466
+[GIN-debug] GET    /name                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func1 (3 handlers)
+[GIN-debug] POST   /start                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func2 (3 handlers)
+[GIN-debug] POST   /stop                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func3 (3 handlers)
+[GIN-debug] GET    /state                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func4 (3 handlers)
+[GIN-debug] GET    /components               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func5 (3 handlers)
+[GIN-debug] GET    /processors               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func6 (3 handlers)
+[GIN-debug] GET    /metrics                  --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func7 (3 handlers)
+[GIN-debug] GET    /config                   --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func8 (3 handlers)
+[GIN-debug] GET    /visualize                --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func9 (3 handlers)
+[GIN-debug] GET    /check                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func10 (3 handlers)
+[GIN-debug] GET    /error                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func11 (3 handlers)
+name 1 addr [::]:56466 url localhost:8080/executor/register
+Post "localhost:8080/executor/register": unsupported protocol scheme "localhost"
+=======plugins: /Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/write.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/json_decode.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/read_line.so
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=========address: [::]:56610
+[GIN-debug] GET    /name                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func1 (3 handlers)
+[GIN-debug] POST   /start                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func2 (3 handlers)
+[GIN-debug] POST   /stop                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func3 (3 handlers)
+[GIN-debug] GET    /state                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func4 (3 handlers)
+[GIN-debug] GET    /components               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func5 (3 handlers)
+[GIN-debug] GET    /processors               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func6 (3 handlers)
+[GIN-debug] GET    /metrics                  --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func7 (3 handlers)
+[GIN-debug] GET    /config                   --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func8 (3 handlers)
+[GIN-debug] GET    /visualize                --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func9 (3 handlers)
+[GIN-debug] GET    /check                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func10 (3 handlers)
+[GIN-debug] GET    /error                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func11 (3 handlers)
+name 1 addr [::]:56610 url localhost:8080/executor/register
+Post "localhost:8080/executor/register": unsupported protocol scheme "localhost"
+=======plugins: /Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/write.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/json_decode.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/read_line.so
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=========address: [::]:56661
+[GIN-debug] GET    /name                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func1 (3 handlers)
+[GIN-debug] POST   /start                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func2 (3 handlers)
+[GIN-debug] POST   /stop                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func3 (3 handlers)
+[GIN-debug] GET    /state                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func4 (3 handlers)
+[GIN-debug] GET    /components               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func5 (3 handlers)
+[GIN-debug] GET    /processors               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func6 (3 handlers)
+[GIN-debug] GET    /metrics                  --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func7 (3 handlers)
+[GIN-debug] GET    /config                   --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func8 (3 handlers)
+[GIN-debug] GET    /visualize                --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func9 (3 handlers)
+[GIN-debug] GET    /check                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func10 (3 handlers)
+[GIN-debug] GET    /error                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func11 (3 handlers)
+name 1 addr [::]:56661 url localhost:8080/executor/register
+Post "localhost:8080/executor/register": unsupported protocol scheme "localhost"
+=======plugins: /Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/write.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/json_decode.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/read_line.so
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=========address: [::]:56682
+[GIN-debug] GET    /name                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func1 (3 handlers)
+[GIN-debug] POST   /start                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func2 (3 handlers)
+[GIN-debug] POST   /stop                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func3 (3 handlers)
+[GIN-debug] GET    /state                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func4 (3 handlers)
+[GIN-debug] GET    /components               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func5 (3 handlers)
+[GIN-debug] GET    /processors               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func6 (3 handlers)
+[GIN-debug] GET    /metrics                  --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func7 (3 handlers)
+[GIN-debug] GET    /config                   --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func8 (3 handlers)
+[GIN-debug] GET    /visualize                --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func9 (3 handlers)
+[GIN-debug] GET    /check                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func10 (3 handlers)
+[GIN-debug] GET    /error                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func11 (3 handlers)
+name 1 addr [::]:56682 url localhost:8080/executor/register
+Post "localhost:8080/executor/register": unsupported protocol scheme "localhost"
+=======plugins: /Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/write.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/json_decode.so,/Users/liuxingwang/go/src/github.com/shima-park/lotus/meta/plugins/read_line.so
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=========address: [::]:56799
+[GIN-debug] GET    /name                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func1 (3 handlers)
+[GIN-debug] POST   /start                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func2 (3 handlers)
+[GIN-debug] POST   /stop                     --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func3 (3 handlers)
+[GIN-debug] GET    /state                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func4 (3 handlers)
+[GIN-debug] GET    /components               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func5 (3 handlers)
+[GIN-debug] GET    /processors               --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func6 (3 handlers)
+[GIN-debug] GET    /metrics                  --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func7 (3 handlers)
+[GIN-debug] GET    /config                   --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func8 (3 handlers)
+[GIN-debug] GET    /visualize                --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func9 (3 handlers)
+[GIN-debug] GET    /check                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func10 (3 handlers)
+[GIN-debug] GET    /error                    --> github.com/shima-park/lotus/pkg/rpc/service.(*ExecutorServer).setRouter.func11 (3 handlers)
+name 1 addr [::]:56799 url http://localhost:8080/executor/register

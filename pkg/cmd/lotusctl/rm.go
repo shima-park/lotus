@@ -3,6 +3,7 @@ package lotusctl
 import (
 	"errors"
 
+	"github.com/shima-park/lotus/pkg/rpc/proto"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +20,7 @@ func NewRMCmd(cmds ...*cobra.Command) *cobra.Command {
 	return cmd
 }
 
-func NewRMPipeCmd() *cobra.Command {
+func NewRMExecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "executor (NAME)",
 		Aliases: []string{"pipe"},
@@ -28,7 +29,9 @@ func NewRMPipeCmd() *cobra.Command {
 			if len(args) == 0 {
 				handleErr(errors.New("You must provide a executor name"))
 			}
-			err := newClient().Executor.Remove(args...)
+			err := newClient().RemoveExecutor(&proto.RemoveExecutorRequest{
+				Names: args,
+			})
 			handleErr(err)
 		},
 	}
@@ -44,7 +47,9 @@ func NewRMPluginCmd() *cobra.Command {
 			if len(args) == 0 {
 				handleErr(errors.New("You must provide a plugin name"))
 			}
-			err := newClient().Plugin.Remove(args...)
+			err := newClient().RemovePlugin(&proto.RemovePluginRequest{
+				Names: args,
+			})
 			handleErr(err)
 		},
 	}
@@ -54,7 +59,7 @@ func NewRMPluginCmd() *cobra.Command {
 func init() {
 	rootCmd.AddCommand(
 		NewRMCmd(
-			NewRMPipeCmd(), NewRMPluginCmd(),
+			NewRMExecCmd(), NewRMPluginCmd(),
 		),
 	)
 }

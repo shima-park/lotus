@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/shima-park/lotus/pkg/rpc/proto"
 	"github.com/shima-park/lotus/pkg/rpc/service"
 )
 
@@ -10,8 +9,7 @@ type Server struct {
 	options Options
 	engine  *gin.Engine
 
-	metadata proto.Metadata
-	*service.Service
+	service.LotusService
 }
 
 func New(opts ...Option) (*Server, error) {
@@ -25,14 +23,12 @@ func New(opts ...Option) (*Server, error) {
 	}
 
 	var err error
-	c.metadata, err = service.NewMetadata(c.options.MetadataPath)
-	if err != nil {
-		return nil, err
-	}
+	c.LotusService, err = service.NewLotusService(
+		c.options.MetadataPath,
+		c.options.HTTPAddr,
+	)
 
-	c.Service = service.NewService(c.metadata)
-
-	return c, nil
+	return c, err
 }
 
 func (c *Server) Serve() error {
@@ -49,5 +45,5 @@ func (c *Server) Serve() error {
 }
 
 func (c *Server) Stop() {
-	_ = c.Service.Stop()
+	c.Stop()
 }

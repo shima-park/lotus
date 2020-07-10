@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/shima-park/lotus/pkg/rpc/proto"
 	"github.com/shima-park/lotus/pkg/util/editor"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,8 @@ func NewEditCmd(cmds ...*cobra.Command) *cobra.Command {
 	return cmd
 }
 
-func NewEditPipeCmd() *cobra.Command {
+func NewEditExecCmd() *cobra.Command {
+	var _type string
 	cmd := &cobra.Command{
 		Use:     "executor (NAME)",
 		Aliases: []string{"exec"},
@@ -36,22 +38,27 @@ func NewEditPipeCmd() *cobra.Command {
 				handleErr(errors.New("You must provide a executor name"))
 			}
 			c := newClient()
-			exec, err := c.Executor.Find(args[0])
+			resp, err := c.GetExecutor(&proto.GetExecutorRequest{
+				Name: args[0],
+			})
 			handleErr(err)
 
 			err = runEditor(
-				exec.RawConfig,
-				func(config []byte) error {
-					return c.Executor.Recreate(exec.Name, config)
-				},
-				false)
+				resp.Config,
+				func(edited []byte) error {
+					err := c.PutExecutor(&proto.PutExecutorRequest{
+						Config: edited,
+					})
+					return err
+				})
 			handleErr(err)
 		},
 	}
+	cmd.Flags().StringVarP(&_type, "type", "t", "", "type of executor")
 	return cmd
 }
 
-func runEditor(origin []byte, callback func(config []byte) error, isAdd bool) error {
+func runEditor(origin []byte, callback func(config []byte) error) error {
 	edit := editor.NewDefaultEditor([]string{"EDITOR"})
 	buff := bytes.NewBuffer(origin)
 	edited, path, err := edit.LaunchTempFile("edit-", "", buff)
@@ -60,7 +67,7 @@ func runEditor(origin []byte, callback func(config []byte) error, isAdd bool) er
 	}
 	defer os.Remove(path)
 
-	if !isAdd && bytes.Equal(origin, edited) {
+	if bytes.Equal(origin, edited) {
 		fmt.Println("Edit cancelled, no changes made.")
 		return nil
 	}
@@ -93,7 +100,7 @@ func hasLines(r io.Reader) (bool, error) {
 func init() {
 	rootCmd.AddCommand(
 		NewEditCmd(
-			NewEditPipeCmd(),
+			NewEditExecCmd(),
 		),
 	)
 }

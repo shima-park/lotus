@@ -1,15 +1,11 @@
 package lotusctl
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
-	"os/exec"
 	"runtime"
 
 	"github.com/shima-park/lotus/pkg/rpc/proto"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 func NewGetCmd(cmds ...*cobra.Command) *cobra.Command {
@@ -25,7 +21,7 @@ func NewGetCmd(cmds ...*cobra.Command) *cobra.Command {
 	return cmd
 }
 
-func NewGetPipeCmd() *cobra.Command {
+func NewGetExecCmd() *cobra.Command {
 	var o string
 	cmd := &cobra.Command{
 		Use:     "executor",
@@ -33,7 +29,7 @@ func NewGetPipeCmd() *cobra.Command {
 		Short:   "Display executor list",
 		Run: func(cmd *cobra.Command, args []string) {
 			c := newClient()
-			list, err := c.Executor.List()
+			list, err := c.ListExecutor()
 			handleErr(err)
 
 			var filters []proto.ExecutorView
@@ -45,51 +41,47 @@ func NewGetPipeCmd() *cobra.Command {
 			}
 
 			switch o {
-			case "term":
-				for _, e := range filters {
-					data, err := c.Executor.Visualize(proto.VisualizeFormatTerm, e.Name)
-					handleErr(err)
-					fmt.Println(string(data))
-
-					break // only show first pipline
-				}
-			case "web":
-				for _, e := range filters {
-					data, err := c.Executor.Visualize(proto.VisualizeFormatSVG, e.Name)
-					handleErr(err)
-
-					f, err := ioutil.TempFile(os.TempDir(), "*.svg")
-					handleErr(err)
-					defer f.Close()
-
-					err = ioutil.WriteFile(f.Name(), data, 0644)
-					handleErr(err)
-
-					_args := browsers()
-					err = exec.Command(_args[0], append(_args[1:], f.Name())...).Run()
-					handleErr(err)
-
-					break // only show first pipline
-				}
-			case "yaml", "yml":
-				for _, e := range filters {
-					fmt.Println(string(e.RawConfig))
-				}
+			//case "term":
+			//	for _, e := range filters {
+			//		data, err := c.Executor.Visualize(proto.VisualizeFormatTerm, e.Name)
+			//		handleErr(err)
+			//		fmt.Println(string(data))
+			//
+			//		break // only show first pipline
+			//	}
+			//case "web":
+			//	for _, e := range filters {
+			//		data, err := c.Executor.Visualize(proto.VisualizeFormatSVG, e.Name)
+			//		handleErr(err)
+			//
+			//		f, err := ioutil.TempFile(os.TempDir(), "*.svg")
+			//		handleErr(err)
+			//		defer f.Close()
+			//
+			//		err = ioutil.WriteFile(f.Name(), data, 0644)
+			//		handleErr(err)
+			//
+			//		_args := browsers()
+			//		err = exec.Command(_args[0], append(_args[1:], f.Name())...).Run()
+			//		handleErr(err)
+			//
+			//		break // only show first pipline
+			//	}
+			//case "yaml", "yml":
+			//	for _, e := range filters {
+			//		fmt.Println(string(e.RawConfig))
+			//	}
 			default:
 				var rows [][]string
 				for _, e := range filters {
 					rows = append(rows, []string{
-						e.Name, e.State, e.Schedule, fmt.Sprint(e.Bootstrap),
-						e.RunTimes, e.StartTime, e.ExitTime,
-						e.Error, e.StreamError, fmt.Sprint(e.StreamErrorCount),
+						e.Name,
 					})
 				}
 
 				renderTable(
 					[]string{
-						"name", "state", "schedule", "bootstrap",
-						"run_times", "start_time", "exit_time",
-						"error", "stream_error", "stream_error_count",
+						"name",
 					},
 					rows,
 				)
@@ -132,23 +124,13 @@ func browsers() []string {
 }
 
 func NewGetCompCmd() *cobra.Command {
-	var o string
-	var p string
 	cmd := &cobra.Command{
 		Use:     "component",
 		Aliases: []string{"comp"},
 		Short:   "Display component list",
 		Run: func(cmd *cobra.Command, args []string) {
-			var list []proto.ComponentView
-			if p == "" {
-				var err error
-				list, err = newClient().Component.List()
-				handleErr(err)
-			} else {
-				pipe, err := newClient().Executor.Find(p)
-				handleErr(err)
-				list = pipe.Components
-			}
+			list, err := newClient().ListComponent()
+			handleErr(err)
 
 			var filters []proto.ComponentView
 			for _, e := range list {
@@ -158,61 +140,32 @@ func NewGetCompCmd() *cobra.Command {
 				filters = append(filters, e)
 			}
 
-			if o == "" {
-				var rows [][]string
-				for _, e := range filters {
-					if p == "" {
-						rows = append(rows, []string{
-							e.Name, e.SampleConfig, e.Description, e.ReflectType, e.InjectName,
-						})
-					} else {
-						rows = append(rows, []string{
-							e.Name, e.RawConfig, e.Description, e.ReflectType, e.InjectName,
-						})
-					}
-				}
-
-				header := []string{
-					"name", "config", "desc", "reflect_type", "inject_name",
-				}
-
-				renderTable(header, rows)
-			} else {
-				for _, e := range filters {
-					if p == "" {
-						fmt.Println(string(e.SampleConfig))
-					} else {
-						fmt.Println(string(e.RawConfig))
-					}
-				}
+			var rows [][]string
+			for _, e := range filters {
+				rows = append(rows, []string{
+					e.Name, e.SampleConfig, e.Description, e.ReflectType, e.InjectName,
+				})
 			}
+
+			header := []string{
+				"name", "config", "desc", "reflect_type", "inject_name",
+			}
+
+			renderTable(header, rows)
 		},
 	}
-
-	cmd.Flags().StringVarP(&p, "executor", "p", "", "The executor scope for this CLI request")
-	cmd.Flags().StringVarP(&o, "output", "o", "", "Output by yaml format.")
 
 	return cmd
 }
 
 func NewGetProcCmd() *cobra.Command {
-	var o string
-	var p string
 	cmd := &cobra.Command{
 		Use:     "processor",
 		Aliases: []string{"proc"},
 		Short:   "Display processor list",
 		Run: func(cmd *cobra.Command, args []string) {
-			var list []proto.ProcessorView
-			if p == "" {
-				var err error
-				list, err = newClient().Processor.List()
-				handleErr(err)
-			} else {
-				pipe, err := newClient().Executor.Find(p)
-				handleErr(err)
-				list = pipe.Processors
-			}
+			list, err := newClient().ListProcessor()
+			handleErr(err)
 
 			var filters []proto.ProcessorView
 			for _, e := range list {
@@ -222,39 +175,20 @@ func NewGetProcCmd() *cobra.Command {
 				filters = append(filters, e)
 			}
 
-			if o == "" {
-				var rows [][]string
-				for _, e := range filters {
-					if p == "" {
-						rows = append(rows, []string{
-							e.Name, e.SampleConfig, e.Description,
-						})
-					} else {
-						rows = append(rows, []string{
-							e.Name, e.RawConfig, e.Description,
-						})
-					}
-				}
-
-				header := []string{
-					"name", "config", "desc",
-				}
-
-				renderTable(header, rows)
-			} else {
-				for _, e := range filters {
-					if p == "" {
-						fmt.Println(string(e.SampleConfig))
-					} else {
-						fmt.Println(string(e.RawConfig))
-					}
-				}
+			var rows [][]string
+			for _, e := range filters {
+				rows = append(rows, []string{
+					e.Name, e.SampleConfig, e.Description,
+				})
 			}
+
+			header := []string{
+				"name", "config", "desc",
+			}
+
+			renderTable(header, rows)
 		},
 	}
-
-	cmd.Flags().StringVarP(&p, "executor", "p", "", "The executor scope for this CLI request")
-	cmd.Flags().StringVarP(&o, "output", "o", "", "Output by yaml format.")
 
 	return cmd
 }
@@ -265,7 +199,7 @@ func NewGetPluginCmd() *cobra.Command {
 		Aliases: []string{"plug"},
 		Short:   "Display plugin list",
 		Run: func(cmd *cobra.Command, args []string) {
-			list, err := newClient().Plugin.List()
+			list, err := newClient().ListPlugin()
 			handleErr(err)
 
 			var rows [][]string
@@ -274,11 +208,11 @@ func NewGetPluginCmd() *cobra.Command {
 					continue
 				}
 				rows = append(rows, []string{
-					e.Name, e.Path, e.Module, e.OpenTime,
+					e.Name, e.Module, e.Path, e.OpenTime.Format("2006-01-02 15:04:05"), e.Error,
 				})
 			}
 
-			header := []string{"name", "path", "module", "open_time"}
+			header := []string{"name", "module", "path", "open_time", "error"}
 
 			renderTable(header, rows)
 		},
@@ -287,32 +221,10 @@ func NewGetPluginCmd() *cobra.Command {
 	return cmd
 }
 
-func NewGetServerCmd() *cobra.Command {
-	var p string
-	cmd := &cobra.Command{
-		Use:     "server",
-		Aliases: []string{"serv", "srv"},
-		Short:   "Display server metadata",
-		Run: func(cmd *cobra.Command, args []string) {
-			meta, err := newClient().Server.Metadata()
-			handleErr(err)
-
-			b, err := yaml.Marshal(meta)
-			handleErr(err)
-			fmt.Println(string(b))
-		},
-	}
-
-	cmd.Flags().StringVar(&p, "p", "", "The executor scope for this CLI request")
-
-	return cmd
-}
-
 func init() {
 	rootCmd.AddCommand(
 		NewGetCmd(
-			NewGetPipeCmd(), NewGetCompCmd(), NewGetProcCmd(), NewGetPluginCmd(),
-			NewGetServerCmd(),
+			NewGetExecCmd(), NewGetCompCmd(), NewGetProcCmd(), NewGetPluginCmd(),
 		),
 	)
 }

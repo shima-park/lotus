@@ -5,13 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
 
-	"github.com/shima-park/lotus/pkg/common/log"
-	"github.com/shima-park/lotus/pkg/rpc/proto"
+	"github.com/shima-park/lotus/pkg/core/common/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -29,11 +27,11 @@ type metadata struct {
 }
 
 type registry struct {
-	PluginPaths         []string             `yaml:"plugin_paths"`
-	ExecutorConfigPaths map[string]*[]string `yaml:"executor_config_paths"`
+	PluginPaths         map[string]string `yaml:"plugin_configs"`
+	ExecutorConfigPaths map[string]string `yaml:"executor_configs"` // key: executor type
 }
 
-func NewMetadata(metapath string) (proto.Metadata, error) {
+func newMetadata(metapath string) (*metadata, error) {
 	if metapath == "" {
 		pwd, err := os.Getwd()
 		if err != nil {
@@ -45,9 +43,7 @@ func NewMetadata(metapath string) (proto.Metadata, error) {
 	m := &metadata{
 		metapath: metapath,
 		metafile: filepath.Join(metapath, METADATA_FILENAME),
-		registry: &registry{
-			ExecutorConfigPaths: map[string]*[]string{},
-		},
+		registry: &registry{},
 	}
 
 	err := os.MkdirAll(metapath, 0750)
@@ -88,198 +84,204 @@ func (m *metadata) save() error {
 	return ioutil.WriteFile(m.metafile, data, 0644)
 }
 
-func (m *metadata) PutPlugin(name string, bin []byte) (path string, err error) {
+func (m *metadata) read(do func(r registry) error) error {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	return do(*m.registry)
+}
+
+func (m *metadata) write(do func(r *registry) error) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	filename := m.GetPath(proto.FileTypePlugin, name)
-
-	err = os.MkdirAll(filepath.Dir(filename), 0777)
-	if err != nil {
-		return "", err
-	}
-
-	err = ioutil.WriteFile(filename, bin, 0666)
-	if err != nil {
-		return "", err
-	}
-
-	err = m.addPluginPath(filename)
-	if err != nil {
-		return "", err
-	}
-
-	return filename, m.save()
-}
-
-func (m *metadata) PutExecutorRawConfig(_type, name string, raw []byte) (path string, err error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
-	filename := m.GetPath(proto.FileTypeExecutorConfig, name)
-
-	err = os.MkdirAll(filepath.Dir(name), 0777)
-	if err != nil {
-		return "", err
-	}
-
-	err = ioutil.WriteFile(filename, raw, 0666)
-	if err != nil {
-		return "", err
-	}
-
-	err = m.addExecutorConfigPath(_type, filename)
-	if err != nil {
-		return "", err
-	}
-
-	return filename, m.save()
-}
-
-func (m *metadata) RemoveExecutorConfigPath(_type, path string) error {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
-	paths := *m.registry.ExecutorConfigPaths[_type]
-	for i, s := range paths {
-		if s == path {
-			paths = append(paths[:i], paths[i+1:]...)
-			break
-		}
-	}
-	return nil
-}
-
-func (m *metadata) AddPluginPath(path string) error {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
-	return m.addPluginPath(path)
-}
-
-func (m *metadata) addPluginPath(path string) error {
-	return m.addPath(path, "*.so", &m.registry.PluginPaths)
-}
-
-func (m *metadata) AddExecutorConfigPath(_type, path string) error {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
-	return m.addExecutorConfigPath(_type, path)
-}
-
-func (m *metadata) addExecutorConfigPath(_type, path string) error {
-	paths, ok := m.registry.ExecutorConfigPaths[_type]
-	if !ok {
-		m.registry.ExecutorConfigPaths[_type] = &[]string{path}
-	}
-
-	return m.addPath(path, "*.yaml", paths)
-}
-
-func (m *metadata) GetPath(ft proto.FileType, filename string) string {
-	switch ft {
-	case proto.FileTypePlugin:
-		if filepath.Ext(filename) == "" {
-			filename += ".so"
-		}
-		return filepath.Join(m.metapath, string(ft), filename)
-	case proto.FileTypeExecutorConfig:
-		if filepath.Ext(filename) == "" {
-			filename += ".yaml"
-		}
-		return filepath.Join(m.metapath, string(ft), filename)
-	default:
-		panic(fmt.Sprintf("Unknown file type: %s", ft))
-	}
-}
-
-func (m *metadata) RemovePluginPath(path string) error {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
-	for i, s := range m.registry.PluginPaths {
-		if s == path {
-			m.registry.PluginPaths = append(m.registry.PluginPaths[:i], m.registry.PluginPaths[i+1:]...)
-			break
-		}
-	}
-
-	_, err := os.Stat(path)
-	if !os.IsNotExist(err) {
-		_ = os.Remove(path)
-	}
-
-	return m.save()
-}
-
-func (m *metadata) addPath(path string, pattern string, target *[]string) error {
-	path = strings.TrimSpace(path)
-	if path == "" {
-		return nil
-	}
-
-	fi, err := os.Stat(path)
+	err := do(m.registry)
 	if err != nil {
 		return err
 	}
 
-	var paths []string
-	if fi.IsDir() {
-		var err error
-		paths, err = filepath.Glob(filepath.Join(path, pattern))
+	return m.save()
+}
+
+//
+//func (m *metadata) addPath(path string, pattern string, target *[]string) error {
+//	path = strings.TrimSpace(path)
+//	if path == "" {
+//		return nil
+//	}
+//
+//	fi, err := os.Stat(path)
+//	if err != nil {
+//		return err
+//	}
+//
+//	var paths []string
+//	if fi.IsDir() {
+//		var err error
+//		paths, err = filepath.Glob(filepath.Join(path, pattern))
+//		if err != nil {
+//			return err
+//		}
+//
+//		if len(paths) == 0 {
+//			return errors.New("not match any " + pattern)
+//		}
+//	} else {
+//		paths = []string{path}
+//	}
+//
+//	for _, p := range paths {
+//		if stringInSlice(p, *target) {
+//			continue
+//		}
+//
+//		*target = append(*target, p)
+//	}
+//
+//	return m.save()
+//}
+//
+
+//
+//func stringInSlice(t string, ss []string) bool {
+//	for _, s := range ss {
+//		if t == s {
+//			return true
+//		}
+//	}
+//	return false
+//}
+//
+//func (m *metadata) GetPluginConfigList(names ...string) ([]proto.PluginConfig, error) {
+//	var list []proto.PluginConfig
+//	m.read(func(r *registry) error {
+//		for _, conf := range r.PluginConfigs {
+//			if len(names) > 0 && !stringInSlice(conf.Name, names) {
+//				continue
+//			}
+//			list = append(list, conf)
+//		}
+//		return nil
+//	})
+//	return list, nil
+//}
+//
+//func (m *metadata) GetExecutorConfigList(names ...string) ([]proto.ExecutorConfig, error) {
+//	var list []proto.ExecutorConfig
+//	m.read(func(r *registry) error {
+//		for _, conf := range r.ExecutorConfigs {
+//			if len(names) > 0 && !stringInSlice(conf.Name, names) {
+//				continue
+//			}
+//			list = append(list, conf)
+//		}
+//		return nil
+//	})
+//	return list, nil
+//}
+//
+func (m *metadata) putExecutorConfig(name string, raw []byte, isOverwrite bool) (err error) {
+	err = m.write(func(r *registry) error {
+		if !isOverwrite {
+			_, ok := r.ExecutorConfigPaths[name]
+			if ok {
+				return fmt.Errorf("%s executor config is exists", name)
+			}
+		}
+
+		path, err := m.writeFile("executors", name, ".yaml", raw)
 		if err != nil {
 			return err
 		}
 
-		if len(paths) == 0 {
-			return errors.New("not match any " + pattern)
-		}
-	} else {
-		paths = []string{path}
-	}
+		r.ExecutorConfigPaths[name] = path
+		return nil
+	})
 
-	for _, p := range paths {
-		if stringInSlice(p, m.registry.PluginPaths) {
-			continue
-		}
-
-		*target = append(*target, p)
-	}
-
-	return m.save()
+	return
 }
 
-func (m *metadata) Overwrite(ft proto.FileType, path string, data []byte) error {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+func (m *metadata) loadExecutorConfig(name string) ([]byte, error) {
+	var data []byte
+	err := m.read(func(r registry) error {
+		path, ok := r.ExecutorConfigPaths[name]
+		if !ok {
+			return errors.New("Not found executor config " + name)
+		}
 
-	return ioutil.WriteFile(path, data, 0644)
+		var err error
+		data, err = ioutil.ReadFile(path)
+		return err
+	})
+
+	return data, err
 }
 
-func (m *metadata) Snapshot(do func(proto.Snapshot)) {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-
-	var s proto.Snapshot
-	for _, pp := range m.registry.PluginPaths {
-		s.PluginPaths = append(s.PluginPaths, pp)
+func (m *metadata) writeFile(subPath string, name, defExt string, data []byte) (string, error) {
+	filename := name
+	if filepath.Ext(name) == "" {
+		filename += defExt
 	}
 
-	for name, paths := range m.registry.ExecutorConfigPaths {
-		for _, path := range *paths {
-			s.ExecutorConfigPaths[name] = append(s.ExecutorConfigPaths[name], path)
-		}
+	path := filepath.Join(m.metapath, subPath, filename)
+
+	err := os.MkdirAll(filepath.Dir(path), 0777)
+	if err != nil {
+		return "", err
 	}
 
-	do(s)
+	err = ioutil.WriteFile(path, data, 0644)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
 }
 
-func stringInSlice(t string, ss []string) bool {
-	for _, s := range ss {
-		if t == s {
-			return true
+func (m *metadata) putPlugin(name string, bin []byte, isOverwrite bool) (err error) {
+	err = m.write(func(r *registry) error {
+		if !isOverwrite {
+			_, ok := r.PluginPaths[name]
+			if ok {
+				return fmt.Errorf("%s plugin path is exists", name)
+			}
 		}
-	}
-	return false
+
+		path, err := m.writeFile("plugins", name, ".so", bin)
+		if err != nil {
+			return err
+		}
+
+		r.PluginPaths[name] = path
+		return nil
+	})
+
+	return
+}
+
+func (m *metadata) removeExecutorConfig(names ...string) error {
+	err := m.write(func(r *registry) error {
+		for _, name := range names {
+			_, ok := r.ExecutorConfigPaths[name]
+			if ok {
+				delete(r.ExecutorConfigPaths, name)
+			}
+		}
+
+		return nil
+	})
+	return err
+}
+
+func (m *metadata) removePluginConfig(names ...string) error {
+	err := m.write(func(r *registry) error {
+		for _, name := range names {
+			_, ok := r.PluginPaths[name]
+			if ok {
+				delete(r.PluginPaths, name)
+			}
+		}
+
+		return nil
+	})
+	return err
 }

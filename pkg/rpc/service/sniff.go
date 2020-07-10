@@ -6,19 +6,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func SniffName(raw []byte) (string, error) {
+func SniffNameAndKind(raw []byte) (string, string, error) {
 	var sniff struct {
 		Name string `yaml:"name"`
+		Kind string `yaml:"kind"`
 	}
 
 	err := yaml.Unmarshal(raw, &sniff)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if sniff.Name == "" {
-		return "", errors.New("No name field or the name is empty")
+		return "", "", errors.New("No name field or the name is empty")
 	}
 
-	return sniff.Name, nil
+	if sniff.Kind == "" {
+		return "", "", errors.New("No kind field or the kind is empty")
+	}
+
+	return sniff.Name, sniff.Kind, nil
 }
